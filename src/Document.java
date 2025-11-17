@@ -1,5 +1,3 @@
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +19,6 @@ public abstract class Document {
 
     public static void main(String[] args) {
         objReader(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"));
-        System.out.println("a");
-        System.out.println("b");
+        System.out.println("c");
     }
 }

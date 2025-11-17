@@ -37,4 +37,8 @@ public class Mesh {
                 "matProj=" + Arrays.toString(matProj) +
                 '}';
     }
+
+    public static void main(String[] args) {
+        System.out.println("aaaa");
+    }
 }

@@ -2,6 +2,8 @@ import javax.print.Doc;
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.Math.*;
@@ -51,7 +53,8 @@ public class Engine3D extends JPanel {
         this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,0), new Vertex3D(1,0,0)));
 */
         //.OBJ file reading + construction of the 3D triangle to render
-        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"),this.meshCube);
+        //Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"),this.meshCube);
+        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\test2.obj"),this.meshCube);
         this.meshCube.triConstruct();
 
         //Projection matrix coefficient value(a require)
@@ -118,15 +121,16 @@ public class Engine3D extends JPanel {
         matRotX[2][2] = cos(theta * 0.5);
         matRotX[3][3] = 1;
 
+        List<Triangle> trisToRaster = new ArrayList<Triangle>();
+
+        //Triangle projection and drawing
         for (Triangle triangleToProject : meshCube.getTris()) {
-            //Triangle projection
 
             //Z-axis Rotation
             Triangle triRotatedZ = new Triangle();
             multiplyMatrixVector(triangleToProject.getVertices()[0],triRotatedZ.getVertices()[0],matRotZ);
             multiplyMatrixVector(triangleToProject.getVertices()[1],triRotatedZ.getVertices()[1],matRotZ);
             multiplyMatrixVector(triangleToProject.getVertices()[2],triRotatedZ.getVertices()[2],matRotZ);
-
 
             //X-axis Rotation
             Triangle triRotatedZX = new Triangle();
@@ -135,12 +139,12 @@ public class Engine3D extends JPanel {
             multiplyMatrixVector(triRotatedZ.getVertices()[1],triRotatedZX.getVertices()[1],matRotX);
             multiplyMatrixVector(triRotatedZ.getVertices()[2],triRotatedZX.getVertices()[2],matRotX);
 
-
             //Z-axis Offset
             Triangle triTranslated  = triRotatedZX;
-            triTranslated.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 6);
-            triTranslated.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 6);
-            triTranslated.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 6);
+
+            triTranslated.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 8.5);
+            triTranslated.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 8.5);
+            triTranslated.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 8.5);
 
             //Line calculation (a revoir)
             double xLine1 = triTranslated.getVertices()[1].getX() - triTranslated.getVertices()[0].getX();
@@ -158,6 +162,7 @@ public class Engine3D extends JPanel {
             normal.vertexNormalisation();
 
             Triangle triProjected = new Triangle();
+
             if (Vertex3D.dotProduct(normal,
                     new Vertex3D(
                             triTranslated.getVertices()[0].getX() - vCamera.getX(),
@@ -196,9 +201,20 @@ public class Engine3D extends JPanel {
 
                 triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * 0.5 * getWidth());
                 triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * 0.5 * getHeight());
-            }
 
-            Vertex3D[] v = triProjected.getVertices();
+                //Save for later rasterization
+                trisToRaster.add(triProjected);
+            }
+        }
+
+        trisToRaster.sort((t1, t2) -> {
+            double meanZ1 = (t1.getVertices()[0].getZ() + t1.getVertices()[1].getZ() + t1.getVertices()[2].getZ()) / 3;
+            double meanZ2 = (t2.getVertices()[0].getZ() + t2.getVertices()[1].getZ() + t2.getVertices()[2].getZ()) / 3;
+            return Double.compare(meanZ2,meanZ1);
+        });
+
+        for (Triangle triBeingDrawn : trisToRaster) {
+            Vertex3D[] v = triBeingDrawn.getVertices();
 
             int[] xs = new int[3];
             int[] ys = new int[3];
@@ -208,11 +224,11 @@ public class Engine3D extends JPanel {
                 ys[i] = (int) Math.round(v[i].getY());
             } //Getting back the coordinate to draw the 2D triangle
 
-            g.setColor(triProjected.getColor());
-            Graphics2D g2 = (Graphics2D) g;
-            //g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.fillPolygon(xs, ys, 3); //Rasterization pas encore faites
+            g.setColor(triBeingDrawn.getColor()); //Setting the correct color
 
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.fillPolygon(xs, ys, 3); //Rasterization pas encore faites
         }
 
     }

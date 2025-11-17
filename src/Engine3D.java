@@ -10,9 +10,9 @@ public class Engine3D extends JPanel {
     private Mesh meshCube;
     private int width;
     private int height;
-    private Timer elapsedTime;
     private double theta;
     private Vertex3D vCamera;
+    private Timer elapsedTime;
 
     public Engine3D(int width, int height) {
         this.width = width;
@@ -26,8 +26,6 @@ public class Engine3D extends JPanel {
         this.elapsedTime = new Timer(16, e -> repaint());
         this.elapsedTime.start();
 
-
-        Color colorCube = new Color(255, 255 , 255, 255);
         //SOUTH
         /**this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(0,1,0), new Vertex3D(1,1,0)));
         this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(1,1,0), new Vertex3D(1,0,0)));
@@ -52,10 +50,11 @@ public class Engine3D extends JPanel {
         this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,1), new Vertex3D(0,0,0)));
         this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,0), new Vertex3D(1,0,0)));
 */
+        //.OBJ file reading + construction of the 3D triangle to render
         Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"),this.meshCube);
         this.meshCube.triConstruct();
-        System.out.println(this.meshCube.toString());
-        //Projection matrix coeefcicent value(a revoir)
+
+        //Projection matrix coefficient value(a require)
         double fNear = 0.1;
         double fFar = 1000;
         double q = fFar / (fFar - fNear);
@@ -63,7 +62,7 @@ public class Engine3D extends JPanel {
         double aspectRatio = (double) this.height / this.width;
         double scalingFactorRad = 1 / tan(fFov * 0.5 / 180 * Math.PI);
 
-        //Projection matrix coeffecient defnition
+        //Projection matrix coefficient definition
         this.meshCube.setMatProj(0,0,aspectRatio * scalingFactorRad);
         this.meshCube.setMatProj(1,1,scalingFactorRad);
         this.meshCube.setMatProj(2,2,q);
@@ -103,7 +102,7 @@ public class Engine3D extends JPanel {
         this.theta += 0.05;
         System.out.println(this.theta);
 
-        //rotation Z
+        //Rotation matrices Z-axis
         matRotZ[0][0] = cos(theta);
         matRotZ[0][1] = sin(theta);
         matRotZ[1][0] = -sin(theta);
@@ -111,7 +110,7 @@ public class Engine3D extends JPanel {
         matRotZ[2][2] = 1;
         matRotZ[3][3] = 1;
 
-        //rotation X
+        //Rotation matrices X-axis
         matRotX[0][0] = 1;
         matRotX[1][1] = cos(theta * 0.5);
         matRotX[1][2] = sin(theta * 0.5);
@@ -119,28 +118,29 @@ public class Engine3D extends JPanel {
         matRotX[2][2] = cos(theta * 0.5);
         matRotX[3][3] = 1;
 
-        for (Triangle t : meshCube.getTris()) {
-            //triangle projection
-            Triangle triProjected = new Triangle();
+        for (Triangle triangleToProject : meshCube.getTris()) {
+            //Triangle projection
+
+            //Z-axis Rotation
             Triangle triRotatedZ = new Triangle();
+            multiplyMatrixVector(triangleToProject.getVertices()[0],triRotatedZ.getVertices()[0],matRotZ);
+            multiplyMatrixVector(triangleToProject.getVertices()[1],triRotatedZ.getVertices()[1],matRotZ);
+            multiplyMatrixVector(triangleToProject.getVertices()[2],triRotatedZ.getVertices()[2],matRotZ);
+
+
+            //X-axis Rotation
             Triangle triRotatedZX = new Triangle();
 
-            //Z axis Rotation
-            multiplyMatrixVector(t.getVertices()[0],triRotatedZ.getVertices()[0],matRotZ);
-            multiplyMatrixVector(t.getVertices()[1],triRotatedZ.getVertices()[1],matRotZ);
-            multiplyMatrixVector(t.getVertices()[2],triRotatedZ.getVertices()[2],matRotZ);
-
-            //X axis Rotation
             multiplyMatrixVector(triRotatedZ.getVertices()[0],triRotatedZX.getVertices()[0],matRotX);
             multiplyMatrixVector(triRotatedZ.getVertices()[1],triRotatedZX.getVertices()[1],matRotX);
             multiplyMatrixVector(triRotatedZ.getVertices()[2],triRotatedZX.getVertices()[2],matRotX);
 
 
-            //Z axis Offset
+            //Z-axis Offset
             Triangle triTranslated  = triRotatedZX;
-            triTranslated.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 3);
-            triTranslated.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 3);
-            triTranslated.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 3);
+            triTranslated.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 6);
+            triTranslated.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 6);
+            triTranslated.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 6);
 
             //Line calculation (a revoir)
             double xLine1 = triTranslated.getVertices()[1].getX() - triTranslated.getVertices()[0].getX();
@@ -157,20 +157,19 @@ public class Engine3D extends JPanel {
             Vertex3D normal = Vertex3D.crossProduct(line1,line2);
             normal.vertexNormalisation();
 
-            //if (normal.getZ() < 0) {
+            Triangle triProjected = new Triangle();
             if (Vertex3D.dotProduct(normal,
                     new Vertex3D(
                             triTranslated.getVertices()[0].getX() - vCamera.getX(),
                             triTranslated.getVertices()[0].getY() - vCamera.getY(),
                             triTranslated.getVertices()[0].getZ() - vCamera.getZ())) < 0) {
 
-                Vertex3D lighDirection = new Vertex3D(0,0,-1);
+                Vertex3D lighDirection = new Vertex3D(0,0,-1); //Pseudo definition of the light source
                 lighDirection.vertexNormalisation();
 
                 double dpLightNorm = Vertex3D.dotProduct(normal,lighDirection);
                 Color colorTri = Triangle.grayScale(dpLightNorm);
-
-                triTranslated.setColor(colorTri);
+                triTranslated.setColor(colorTri); //Definition of the greyscale value for the triangle regarding its orienttion
 
                 //Projecting 3D into 2D
                 multiplyMatrixVector(triTranslated.getVertices()[0],triProjected.getVertices()[0], this.meshCube.getMatProj());
@@ -207,9 +206,8 @@ public class Engine3D extends JPanel {
             for (int i = 0; i < 3; i++) {
                 xs[i] = (int) Math.round(v[i].getX());
                 ys[i] = (int) Math.round(v[i].getY());
-            }
+            } //Getting back the coordinate to draw the 2D triangle
 
-            //g.setColor(Color.WHITE);
             g.setColor(triProjected.getColor());
             Graphics2D g2 = (Graphics2D) g;
             //g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

@@ -22,5 +22,6 @@ public abstract class Document {
     public static void main(String[] args) {
         objReader(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"));
         System.out.println("a");
+        System.out.println("b");
     }
 }

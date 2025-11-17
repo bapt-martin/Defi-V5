@@ -1,5 +1,7 @@
+import javax.print.Doc;
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Paths;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.Math.*;
@@ -27,29 +29,32 @@ public class Engine3D extends JPanel {
 
         Color colorCube = new Color(255, 255 , 255, 255);
         //SOUTH
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(0,1,0), new Vertex3D(1,1,0), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(1,1,0), new Vertex3D(1,0,0), colorCube));
+        /**this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(0,1,0), new Vertex3D(1,1,0)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,0), new Vertex3D(1,1,0), new Vertex3D(1,0,0)));
 
         //EAST
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,0), new Vertex3D(1,1,0), new Vertex3D(1,1,1), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,0), new Vertex3D(1,1,1), new Vertex3D(1,0,1), colorCube));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,0), new Vertex3D(1,1,0), new Vertex3D(1,1,1)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,0), new Vertex3D(1,1,1), new Vertex3D(1,0,1)));
 
         //NORTH
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(1,1,1), new Vertex3D(0,1,1), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,1,1), new Vertex3D(0,0,1), colorCube));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(1,1,1), new Vertex3D(0,1,1)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,1,1), new Vertex3D(0,0,1)));
 
         //WEST
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,1), new Vertex3D(0,1,1), new Vertex3D(0,1,0), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,1), new Vertex3D(0,1,0), new Vertex3D(0,0,0), colorCube));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,1), new Vertex3D(0,1,1), new Vertex3D(0,1,0)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,0,1), new Vertex3D(0,1,0), new Vertex3D(0,0,0)));
 
         //TOP
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,1,0), new Vertex3D(0,1,1), new Vertex3D(1,1,1), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,1,0), new Vertex3D(1,1,1), new Vertex3D(1,1,0), colorCube));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,1,0), new Vertex3D(0,1,1), new Vertex3D(1,1,1)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(0,1,0), new Vertex3D(1,1,1), new Vertex3D(1,1,0)));
 
         //BOTTOM
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,1), new Vertex3D(0,0,0), colorCube));
-        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,0), new Vertex3D(1,0,0), colorCube));
-
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,1), new Vertex3D(0,0,0)));
+        this.meshCube.getTris().add(new Triangle(new Vertex3D(1,0,1), new Vertex3D(0,0,0), new Vertex3D(1,0,0)));
+*/
+        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"),this.meshCube);
+        this.meshCube.triConstruct();
+        System.out.println(this.meshCube.toString());
         //Projection matrix coeefcicent value(a revoir)
         double fNear = 0.1;
         double fFar = 1000;

@@ -39,10 +39,10 @@ public class Matrix {
     public static Matrix matrixCreateRotationX4x4 (double theta){
         Matrix matRotX = new Matrix();
         matRotX.getMatrix()[0][0] = 1;
-        matRotX.getMatrix()[1][1] = cos(theta * 0.5);
-        matRotX.getMatrix()[1][2] = sin(theta * 0.5);
-        matRotX.getMatrix()[2][1] = -sin(theta * 0.5);
-        matRotX.getMatrix()[2][2] = cos(theta * 0.5);
+        matRotX.getMatrix()[1][1] = cos(theta);
+        matRotX.getMatrix()[1][2] = sin(theta);
+        matRotX.getMatrix()[2][1] = -sin(theta);
+        matRotX.getMatrix()[2][2] = cos(theta);
         matRotX.getMatrix()[3][3] = 1;
 
         return matRotX;

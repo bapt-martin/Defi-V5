@@ -19,7 +19,7 @@ public class Vertex3D {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.w = 0;
+        this.w = 1;
     }
 
     public static double vertexLength(Vertex3D vertIn) {
@@ -56,7 +56,7 @@ public class Vertex3D {
     }
 
     public static Vertex3D vertexSubtraction(Vertex3D vert1, Vertex3D vert2) {
-        return new Vertex3D(vert1.getX() + vert2.getX(), vert1.getY() + vert2.getY(),vert1.getZ() + vert2.getZ());
+        return new Vertex3D(vert1.getX() - vert2.getX(), vert1.getY() - vert2.getY(),vert1.getZ() - vert2.getZ());
     }
 
     public void vertexOffset(double xOffset, double yOffset, double zOffset) {

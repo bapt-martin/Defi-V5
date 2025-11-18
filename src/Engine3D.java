@@ -39,13 +39,13 @@ public class Engine3D extends JPanel {
         //Projection matrix coefficient definition
         this.meshCube.setMatProj(Matrix.matrixCreateProjection4x4(fNear,fFar,fFov,height,width));
 
-        //printMatrix(this.meshCube.getMatProj());
+        printMatrix(this.meshCube.getMatProj());
     }
 
-    public void printMatrix(double[][] m) {
+    public void printMatrix(Matrix m) {
         for (int i = 0; i < 4; i++) {
             System.out.printf("| %8.4f %8.4f %8.4f %8.4f |\n",
-                    m[i][0], m[i][1], m[i][2], m[i][3]);
+                    m.getMatrix()[i][0], m.getMatrix()[i][1], m.getMatrix()[i][2], m.getMatrix()[i][3]);
         }
     }
 
@@ -57,51 +57,47 @@ public class Engine3D extends JPanel {
         System.out.println(this.theta);
 
         //Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(theta * 0.5);
-
+        Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(this.theta);
+        System.out.println("Z");
+        printMatrix(matRotZ);
         //Rotation matrices X-axis
-        Matrix matRotX = Matrix.matrixCreateRotationX4x4(theta);
-
+        Matrix matRotX = Matrix.matrixCreateRotationX4x4(this.theta * 0.5);
+        System.out.println("X");
+        printMatrix(matRotX);
         //Z-Axis Offset
         Matrix matTrans = Matrix.matrixMultiplication(matRotZ, matRotX);
-
-        Matrix matWorld = Matrix.matrixMultiplication(matTrans,Matrix.matrixCreateTranslation4x4(0,0,-16));
+        System.out.println("ZX");
+        printMatrix(matTrans);
+        Matrix matWorld = Matrix.matrixMultiplication(matTrans,Matrix.matrixCreateTranslation4x4(0,0,8.5));
 
         List<Triangle> trisToRaster = new ArrayList<Triangle>();
         //Triangle projection and drawing
         for (Triangle triangleToProject : meshCube.getTris()) {
 
             Triangle triTransformed = new Triangle();
-            //Z-axis and X-axis Rotation
-            Triangle triRotatedZX = new Triangle();
 
+            //Z-axis and X-axis Rotation
             triangleToProject.getVertices()[0].vertexMatrixMultiplication(triTransformed.getVertices()[0],matWorld);
             triangleToProject.getVertices()[1].vertexMatrixMultiplication(triTransformed.getVertices()[1],matWorld);
             triangleToProject.getVertices()[2].vertexMatrixMultiplication(triTransformed.getVertices()[2],matWorld);
 
 //            //Z-axis Offset
 //            Triangle triTranslated;
-//            triTranslated = triRotatedZX;
+//            triTranslated = triangleToProject;
 //
-//            triTranslated.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 8.5);
-//            triTranslated.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 8.5);
-//            triTranslated.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 8.5);
+//            triTransformed.getVertices()[0].setZ(triTranslated.getVertices()[0].getZ() + 8.5);
+//            triTransformed.getVertices()[1].setZ(triTranslated.getVertices()[1].getZ() + 8.5);
+//            triTransformed.getVertices()[2].setZ(triTranslated.getVertices()[2].getZ() + 8.5);
 
-            //Line calculation (a revoir)
-//            double xLine1 = triTransformed.getVertices()[1].getX() - triTransformed.getVertices()[0].getX();
-//            double yLine1 = triTransformed.getVertices()[1].getY() - triTransformed.getVertices()[0].getY();
-//            double zLine1 = triTransformed.getVertices()[1].getZ() - triTransformed.getVertices()[0].getZ();
-//
-//            double xLine2 = triTransformed.getVertices()[2].getX() - triTransformed.getVertices()[0].getX();
-//            double yLine2 = triTransformed.getVertices()[2].getY() - triTransformed.getVertices()[0].getY();
-//            double zLine2 = triTransformed.getVertices()[2].getZ() - triTransformed.getVertices()[0].getZ();
 
+            //line creation for determining the normal
             Vertex3D line1 = Vertex3D.vertexSubtraction(triTransformed.getVertices()[1],triTransformed.getVertices()[0]);
             Vertex3D line2 = Vertex3D.vertexSubtraction(triTransformed.getVertices()[2],triTransformed.getVertices()[0]);
 
             Vertex3D normal = Vertex3D.crossProduct(line1,line2);
             normal.vertexNormalisation();
 
+            //casting the ray of the camera
             Vertex3D vCameraRay = Vertex3D.vertexSubtraction(triTransformed.getVertices()[0],vCamera);
 
 
@@ -122,9 +118,9 @@ public class Engine3D extends JPanel {
                 triTransformed.getVertices()[2].vertexMatrixMultiplication(triProjected.getVertices()[2], this.meshCube.getMatProj());
                 triProjected.setColor(triTransformed.getColor()); //Color transfer
 
-                triProjected.getVertices()[0].vertexDivision(triTransformed.getVertices()[0].getW());
-                triProjected.getVertices()[1].vertexDivision(triTransformed.getVertices()[1].getW());
-                triProjected.getVertices()[2].vertexDivision(triTransformed.getVertices()[2].getW());
+                triProjected.getVertices()[0].vertexDivision(triProjected.getVertices()[0].getW());
+                triProjected.getVertices()[1].vertexDivision(triProjected.getVertices()[1].getW());
+                triProjected.getVertices()[2].vertexDivision(triProjected.getVertices()[2].getW());
 
                 //Offset into visible normalised space
                 Vertex3D vOffsetView = new Vertex3D(1,1,0);

@@ -1,17 +1,17 @@
-import java.awt.*;
-
 import static java.lang.Math.sqrt;
 
 public class Vertex3D {
     private double x;
     private double y;
     private double z;
+    private double w;
     //private Color color;
 
     public Vertex3D() {
         x = 0;
         y = 0;
         z = 0;
+        w = 1;
         //color = null;
     }
 
@@ -19,6 +19,7 @@ public class Vertex3D {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.w = 0;
     }
 
     public static double vertexLength(Vertex3D vertIn) {
@@ -50,6 +51,35 @@ public class Vertex3D {
         return res;
     }
 
+    public static Vertex3D vertexAddition(Vertex3D vert1, Vertex3D vert2) {
+        return new Vertex3D(vert1.getX() + vert2.getX(), vert1.getY() + vert2.getY(),vert1.getZ() + vert2.getZ());
+    }
+
+    public static Vertex3D vertexSubtraction(Vertex3D vert1, Vertex3D vert2) {
+        return new Vertex3D(vert1.getX() + vert2.getX(), vert1.getY() + vert2.getY(),vert1.getZ() + vert2.getZ());
+    }
+
+    public void vertexOffset(double xOffset, double yOffset, double zOffset) {
+        this.setX(xOffset);
+        this.setY(yOffset);
+        this.setZ(zOffset);
+    }
+
+    public void vertexMultiplication (double factor) {
+        this.setX(this.getX() * factor);
+        this.setY(this.getY() * factor);
+        this.setZ(this.getZ() * factor);
+    }
+
+    public void vertexDivision (double factor) {
+        if (factor != 0) {
+            this.setX(this.getX() / factor);
+            this.setY(this.getY() / factor);
+            this.setZ(this.getZ() / factor);
+        }
+
+    }
+
     public double getX() {
         return x;
     }
@@ -74,6 +104,14 @@ public class Vertex3D {
         this.z = z;
     }
 
+    public double getW() {
+        return w;
+    }
+
+    public void setW(double w) {
+        this.w = w;
+    }
+
     @Override
     public String toString() {
         return "Vertex3D{" +
@@ -81,5 +119,12 @@ public class Vertex3D {
                 ", y=" + y +
                 ", z=" + z +
                 '}';
+    }
+
+    public void vertexMatrixMultiplication(Vertex3D vertOut, Matrix mat) {
+        vertOut.setX(getX() * mat.getMatrix()[0][0] + getY() * mat.getMatrix()[1][0] + getZ() * mat.getMatrix()[2][0] + getW() * mat.getMatrix()[3][0]);
+        vertOut.setY(getX() * mat.getMatrix()[0][1] + getY() * mat.getMatrix()[1][1] + getZ() * mat.getMatrix()[2][1] + getW() * mat.getMatrix()[3][1]);
+        vertOut.setZ(getX() * mat.getMatrix()[0][2] + getY() * mat.getMatrix()[1][2] + getZ() * mat.getMatrix()[2][2] + getW() * mat.getMatrix()[3][2]);
+        vertOut.setW(getX() * mat.getMatrix()[0][3] + getY() * mat.getMatrix()[1][3] + getZ() * mat.getMatrix()[2][3] + getW() * mat.getMatrix()[3][3]);
     }
 }

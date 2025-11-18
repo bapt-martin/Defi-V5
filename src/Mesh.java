@@ -6,11 +6,15 @@ public class Mesh {
     private List<Vertex3D> vertices;
     private List<int []> faceIndices;
     private final List<Triangle> tris;
-    private double[][] matProj;
+    private Matrix matProj;
+
+    public void setMatProj(Matrix matProj) {
+        this.matProj = matProj;
+    }
 
     public Mesh() {
         this.tris = new ArrayList<>();
-        this.matProj = new double[4][4];
+        this.matProj = null;
         this.vertices = new ArrayList<Vertex3D>();
         this.faceIndices = new ArrayList<>();
 
@@ -34,13 +38,13 @@ public class Mesh {
         return tris;
     }
 
-    public double[][] getMatProj() {
+    public Matrix getMatProj() {
         return matProj;
     }
 
-    public void setMatProj(int i, int j, double value) {
-        this.matProj[i][j] = value;
-    }
+//    public void setMatProj(int i, int j, double value) {
+//        this.matProj.getMatrix()[i][j] = value;
+//    }
 
     public List<Vertex3D> getVertices() {
         return vertices;
@@ -67,7 +71,7 @@ public class Mesh {
     @Override
     public String toString() {
         return "Mesh{" +
-                "matProj=" + Arrays.toString(matProj) +
+                "matProj=" + Arrays.toString(matProj.getMatrix()) +
                 '}';
     }
 

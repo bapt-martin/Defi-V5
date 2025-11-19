@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 import static java.lang.Math.*;
 
 public class Matrix {
@@ -9,6 +11,45 @@ public class Matrix {
 
     public Matrix(int nbRow, int nbCol) {
         this.matrix = new double[nbRow][nbCol];
+    }
+
+    public static Matrix matrixCreatePointAt(Vertex3D vertPosition, Vertex3D vertTarget, Vertex3D vertUp) {
+        //New forward direction
+        Vertex3D vertNewForward = Vertex3D.vertexSubtraction(vertTarget, vertPosition);
+        vertNewForward.vertexNormalisation();
+
+        //New up direction
+        Vertex3D a = new Vertex3D(vertNewForward);
+        a.vertexMultiplication(Vertex3D.dotProduct(vertUp, vertNewForward));
+        Vertex3D vertNewUp = Vertex3D.vertexSubtraction(vertUp, a);
+        vertNewUp.vertexNormalisation();
+
+        //New right direction
+        Vertex3D vertNewRight = Vertex3D.crossProduct(vertNewUp, vertNewForward);
+        vertNewRight.vertexNormalisation();
+
+        Matrix matPointAt = new Matrix();
+        matPointAt.getMatrix()[0][0] = vertNewRight.getX();   matPointAt.getMatrix()[0][1] = vertNewRight.getY();   matPointAt.getMatrix()[0][2] = vertNewRight.getZ();   matPointAt.getMatrix()[0][3] = 0;
+        matPointAt.getMatrix()[1][0] = vertNewUp.getX();      matPointAt.getMatrix()[1][1] = vertNewUp.getY();      matPointAt.getMatrix()[1][2] = vertNewUp.getZ();      matPointAt.getMatrix()[1][3] = 0;
+        matPointAt.getMatrix()[2][0] = vertNewForward.getX(); matPointAt.getMatrix()[2][1] = vertNewForward.getY(); matPointAt.getMatrix()[2][2] = vertNewForward.getZ(); matPointAt.getMatrix()[2][3] = 0;
+        matPointAt.getMatrix()[3][0] = vertPosition.getX();   matPointAt.getMatrix()[3][1] = vertPosition.getY();   matPointAt.getMatrix()[3][2] = vertPosition.getZ();   matPointAt.getMatrix()[3][3] = 1;
+
+        return matPointAt;
+    }
+
+    public static Matrix matrixQuickInverse(Matrix matIn){ //Only Rotation/Translation matrices
+        Matrix matInverse = new Matrix();
+
+        matInverse.getMatrix()[0][0] = matIn.getMatrix()[0][0]; matInverse.getMatrix()[0][1] = matIn.getMatrix()[1][0]; matInverse.getMatrix()[0][2] = matIn.getMatrix()[2][0];
+        matInverse.getMatrix()[1][0] = matIn.getMatrix()[0][1]; matInverse.getMatrix()[1][1] = matIn.getMatrix()[1][1]; matInverse.getMatrix()[1][2] = matIn.getMatrix()[2][1];
+        matInverse.getMatrix()[2][0] = matIn.getMatrix()[0][2]; matInverse.getMatrix()[2][1] = matIn.getMatrix()[1][2]; matInverse.getMatrix()[2][2] = matIn.getMatrix()[2][2];
+
+        matInverse.getMatrix()[3][0] = -(matIn.getMatrix()[3][0] * matInverse.getMatrix()[0][0] + matIn.getMatrix()[3][1] * matInverse.getMatrix()[1][0] + matIn.getMatrix()[3][2] * matInverse.getMatrix()[2][0]);
+        matInverse.getMatrix()[3][1] = -(matIn.getMatrix()[3][0] * matInverse.getMatrix()[0][1] + matIn.getMatrix()[3][1] * matInverse.getMatrix()[1][1] + matIn.getMatrix()[3][2] * matInverse.getMatrix()[2][1]);
+        matInverse.getMatrix()[3][2] = -(matIn.getMatrix()[3][0] * matInverse.getMatrix()[0][2] + matIn.getMatrix()[3][1] * matInverse.getMatrix()[1][2] + matIn.getMatrix()[3][2] * matInverse.getMatrix()[2][2]);
+        matInverse.getMatrix()[3][3] = 1;
+
+        return  matInverse;
     }
 
     public static Matrix matrixCreateIdentity(int nbRow, int nbCol) {
@@ -34,6 +75,18 @@ public class Matrix {
         matRotZ.getMatrix()[3][3] = 1;
 
         return matRotZ;
+    }
+
+    public static Matrix matrixCreateRotationY4x4(double theta) {
+        Matrix matRotY = new Matrix();
+        matRotY.getMatrix()[0][0] = Math.cos(theta);
+        matRotY.getMatrix()[0][2] = Math.sin(theta);
+        matRotY.getMatrix()[1][1] = 1;
+        matRotY.getMatrix()[2][0] = -Math.sin(theta);
+        matRotY.getMatrix()[2][2] = Math.cos(theta);
+        matRotY.getMatrix()[3][3] = 1;
+
+        return matRotY;
     }
 
     public static Matrix matrixCreateRotationX4x4 (double theta){

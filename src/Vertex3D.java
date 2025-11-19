@@ -22,6 +22,13 @@ public class Vertex3D {
         this.w = 1;
     }
 
+    public Vertex3D(Vertex3D other) {
+        this.x = other.x;
+        this.y = other.y;
+        this.z = other.z;
+        this.w = other.w;
+    }
+
     public static double vertexLength(Vertex3D vertIn) {
         double res = sqrt(vertIn.getX()*vertIn.getX() + vertIn.getY()*vertIn.getY() + vertIn.getZ()*vertIn.getZ());
 
@@ -121,7 +128,7 @@ public class Vertex3D {
                 '}';
     }
 
-    public void vertexMatrixMultiplication(Vertex3D vertOut, Matrix mat) {
+    public void vertex_Matrix_Multiplication(Vertex3D vertOut, Matrix mat) {
         vertOut.setX(getX() * mat.getMatrix()[0][0] + getY() * mat.getMatrix()[1][0] + getZ() * mat.getMatrix()[2][0] + getW() * mat.getMatrix()[3][0]);
         vertOut.setY(getX() * mat.getMatrix()[0][1] + getY() * mat.getMatrix()[1][1] + getZ() * mat.getMatrix()[2][1] + getW() * mat.getMatrix()[3][1]);
         vertOut.setZ(getX() * mat.getMatrix()[0][2] + getY() * mat.getMatrix()[1][2] + getZ() * mat.getMatrix()[2][2] + getW() * mat.getMatrix()[3][2]);

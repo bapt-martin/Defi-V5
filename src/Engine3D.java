@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Engine3D extends JPanel implements KeyListener {
-    private Mesh mesh;
+    private final Mesh mesh;
     private int prevWidth;
     private int prevHeight;
     private double theta;
-    private Vertex3D vertCamera;
-    private Vertex3D vertLookDir;
+    private final Vertex3D vertCamera;
+    private final Vertex3D vertLookDir;
     private Timer elapsedTime;
-    private boolean[] keys = new boolean[256];
-    private double speed = 0.1;
+    private final boolean[] keys = new boolean[256];
+    private final double speed = 1;
 
     public Engine3D(int widthInit, int heightInit) {
         this.prevWidth = widthInit;
@@ -83,7 +83,7 @@ public class Engine3D extends JPanel implements KeyListener {
         System.out.println(this.theta);
 
         // Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(this.theta);
+        Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(this.theta + Math.PI);
 
         // Rotation matrices Y-axis
         Matrix matRotY = Matrix.matrixCreateRotationY4x4(this.theta * 0.5);
@@ -198,7 +198,7 @@ public class Engine3D extends JPanel implements KeyListener {
             g.setColor(triBeingDrawn.getColor()); // Setting the correct color
 
             Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.fillPolygon(xs, ys, 3); // Rasterization pas encore faites
         }
 
@@ -247,22 +247,27 @@ public class Engine3D extends JPanel implements KeyListener {
                 break;
 
             // Q = Déplacement gauche (strafe)
-            case KeyEvent.VK_Q:
+            case KeyEvent.VK_LEFT:
                 vertCamera.setX(vertCamera.getX() - right.getX() * speed);
                 vertCamera.setZ(vertCamera.getZ() - right.getZ() * speed);
                 break;
 
             // D = Déplacement droite (strafe)
-            case KeyEvent.VK_D:
+            case KeyEvent.VK_RIGHT:
                 vertCamera.setX(vertCamera.getX() + right.getX() * speed);
                 vertCamera.setZ(vertCamera.getZ() + right.getZ() * speed);
                 break;
 
-            case KeyEvent.VK_SPACE:
+            case KeyEvent.VK_UP:
+                vertCamera.setY(vertCamera.getY() - speed);
+                break;
+
+            case KeyEvent.VK_DOWN:
                 vertCamera.setY(vertCamera.getY() + speed);
                 break;
 
         }
+
         if (keys[KeyEvent.VK_SPACE] && keys[KeyEvent.VK_SHIFT]) {
             vertCamera.setY(vertCamera.getY() - speed);
         }

@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.nio.file.Paths;
@@ -9,14 +8,27 @@ import java.util.List;
 
 public class Engine3D extends JPanel implements KeyListener {
     private final Mesh mesh;
+
     private int prevWidth;
     private int prevHeight;
+
     private double theta;
+
     private final Vertex3D vertCamera;
     private final Vertex3D vertLookDir;
-    private Timer elapsedTime;
-    private final boolean[] keys = new boolean[256];
-    private final double speed = 1;
+    private double cameraYaw;
+
+    private final boolean[] keysPressed = new boolean[256];
+    private final double translationCameraSpeed = 1;
+    private final double rotationCameraSpeed = 1;
+
+
+    private Timer timeLoop;
+    private long startFrameTime = System.nanoTime();
+    private long lastFrameTime = System.nanoTime();
+    private double deltaTime = System.nanoTime();
+    private double elapsedTime;
+
 
     public Engine3D(int widthInit, int heightInit) {
         this.prevWidth = widthInit;
@@ -28,8 +40,8 @@ public class Engine3D extends JPanel implements KeyListener {
         this.mesh = new Mesh();
         setBackground(Color.BLACK);
 
-        this.elapsedTime = new Timer(16, e -> repaint());
-        this.elapsedTime.start();
+        this.timeLoop = new Timer(16, e -> repaint());
+        this.timeLoop.start();
 
         setFocusable(true);
         requestFocusInWindow();
@@ -61,8 +73,17 @@ public class Engine3D extends JPanel implements KeyListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        handleKeyPress();
+
         int currentWidth = getWidth();
         int currentHeight = getHeight();
+        long now = System.nanoTime();
+        elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
+        deltaTime = (now - lastFrameTime) / 1_000_000_000.0; // secondes
+        lastFrameTime = System.nanoTime();
+
+        System.out.println("Elapsed time : " + elapsedTime + ", delta Time : " + deltaTime);
 
         if (currentWidth != prevWidth || currentHeight != prevHeight) {
             this.prevWidth = currentWidth;
@@ -80,7 +101,7 @@ public class Engine3D extends JPanel implements KeyListener {
 
         // Actualisation of theta
 //        this.theta += 0.05;
-        System.out.println(this.theta);
+//        System.out.println(this.theta);
 
         // Rotation matrices Z-axis
         Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(this.theta + Math.PI);
@@ -91,7 +112,7 @@ public class Engine3D extends JPanel implements KeyListener {
         // Rotation matrices X-axis
         Matrix matRotX = Matrix.matrixCreateRotationX4x4(this.theta * 1.5);
 
-        //  Z-Axis Offset
+        // Z-Axis Offset
         Matrix matTrans = Matrix.matrixMultiplication(matRotZ, Matrix.matrixMultiplication(matRotX,matRotY));
         Matrix matWorld = Matrix.matrixMultiplication(matTrans,Matrix.matrixCreateTranslation4x4(0,0,16));
 
@@ -144,6 +165,7 @@ public class Engine3D extends JPanel implements KeyListener {
                 triTransformed.getVertices()[0].vertex_Matrix_Multiplication(triViewed.getVertices()[0],matView);
                 triTransformed.getVertices()[1].vertex_Matrix_Multiplication(triViewed.getVertices()[1],matView);
                 triTransformed.getVertices()[2].vertex_Matrix_Multiplication(triViewed.getVertices()[2],matView);
+                triViewed.setColor(triTransformed.getColor()); // Color transfer
 
                 // Projecting 3D into 2D
                 triViewed.getVertices()[0].vertex_Matrix_Multiplication(triProjected.getVertices()[0], this.mesh.getMatProj());
@@ -162,7 +184,6 @@ public class Engine3D extends JPanel implements KeyListener {
                 triProjected.getVertices()[0] = Vertex3D.vertexAddition(triProjected.getVertices()[0], vOffsetView );
                 triProjected.getVertices()[1] = Vertex3D.vertexAddition(triProjected.getVertices()[1], vOffsetView );
                 triProjected.getVertices()[2] = Vertex3D.vertexAddition(triProjected.getVertices()[2], vOffsetView );
-
 
                 // Scaling to screen dimension
                 triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * 0.5 * getWidth());
@@ -198,7 +219,7 @@ public class Engine3D extends JPanel implements KeyListener {
             g.setColor(triBeingDrawn.getColor()); // Setting the correct color
 
             Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+//            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.fillPolygon(xs, ys, 3); // Rasterization pas encore faites
         }
 
@@ -206,75 +227,81 @@ public class Engine3D extends JPanel implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        keys[e.getKeyCode()] = true;
-        System.out.println(e.toString());
-        handleKeyPress(e);
+        keysPressed[e.getKeyCode()] = true;
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        keys[e.getKeyCode()] = false;
+        keysPressed[e.getKeyCode()] = false;
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        // On n'a rien à faire ici
     }
 
-    private void handleKeyPress(KeyEvent e) {
+    private void handleKeyPress() {
         // Construire un vecteur droite à partir de LookDir
-        Vertex3D right = new Vertex3D(
-                vertLookDir.getZ(),
-                0,
-                -vertLookDir.getX()
-        );
-        right.vertexNormalisation();
+        //Vertex3D right = new Vertex3D(
+//                vertLookDir.getZ(),
+//                0,
+//                -vertLookDir.getX()
+//        );
+//        right.vertexNormalisation();
 
-        switch (e.getKeyCode()) {
+        double cameraEvoX = vertCamera.getX();
+        double cameraEvoY = vertCamera.getY();
+        double cameraEvoZ = vertCamera.getZ();
 
-            // Z = Avancer
-            case KeyEvent.VK_Z:
-                vertCamera.setX(vertCamera.getX() + vertLookDir.getX() * speed);
-                vertCamera.setY(vertCamera.getY() + vertLookDir.getY() * speed);
-                vertCamera.setZ(vertCamera.getZ() + vertLookDir.getZ() * speed);
-                break;
-
-            // S = Reculer
-            case KeyEvent.VK_S:
-                vertCamera.setX(vertCamera.getX() - vertLookDir.getX() * speed);
-                vertCamera.setY(vertCamera.getY() - vertLookDir.getY() * speed);
-                vertCamera.setZ(vertCamera.getZ() - vertLookDir.getZ() * speed);
-                break;
-
-            // Q = Déplacement gauche (strafe)
-            case KeyEvent.VK_LEFT:
-                vertCamera.setX(vertCamera.getX() - right.getX() * speed);
-                vertCamera.setZ(vertCamera.getZ() - right.getZ() * speed);
-                break;
-
-            // D = Déplacement droite (strafe)
-            case KeyEvent.VK_RIGHT:
-                vertCamera.setX(vertCamera.getX() + right.getX() * speed);
-                vertCamera.setZ(vertCamera.getZ() + right.getZ() * speed);
-                break;
-
-            case KeyEvent.VK_UP:
-                vertCamera.setY(vertCamera.getY() - speed);
-                break;
-
-            case KeyEvent.VK_DOWN:
-                vertCamera.setY(vertCamera.getY() + speed);
-                break;
-
+        // Q = Left
+        if (keysPressed[KeyEvent.VK_Q]) {
+            cameraEvoX += -translationCameraSpeed;
         }
 
-        if (keys[KeyEvent.VK_SPACE] && keys[KeyEvent.VK_SHIFT]) {
-            vertCamera.setY(vertCamera.getY() - speed);
+        // D = Right
+        if (keysPressed[KeyEvent.VK_D]) {
+            cameraEvoX += translationCameraSpeed;
         }
+
+        // SHIFT + SPACE = Down
+        // SPACE = Up
+        if (keysPressed[KeyEvent.VK_SHIFT]) {
+            if (keysPressed[KeyEvent.VK_SPACE]) {
+                cameraEvoY += translationCameraSpeed;
+            }
+        } else {
+            if (keysPressed[KeyEvent.VK_SPACE]) {
+                cameraEvoY += -translationCameraSpeed;
+            }
+        }
+
+        Vertex3D vertForward = new Vertex3D(vertLookDir);
+        vertForward.vertexMultiplication(rotationCameraSpeed);
+
+        // Z = Forward
+        if (keysPressed[KeyEvent.VK_Z]) {
+            cameraEvoZ += translationCameraSpeed;
+        }
+        // S = Behind
+        if (keysPressed[KeyEvent.VK_S]) {
+            cameraEvoZ += -translationCameraSpeed;
+        }
+
+        // A = Trigo Y-Axis rotation Yaw
+        if (keysPressed[KeyEvent.VK_A]) {
+            cameraYaw += -rotationCameraSpeed;
+        }
+
+        if (keysPressed[KeyEvent.VK_E]) {
+            cameraYaw += rotationCameraSpeed;
+        }
+
+        vertCamera.setX(cameraEvoX);
+        vertCamera.setY(cameraEvoY);
+        vertCamera.setZ(cameraEvoZ);
     }
 
-    public Timer getElapsedTime() {
-        return elapsedTime;
+    public Timer getTimeLoop() {
+        return timeLoop;
     }
 
     public Mesh getMesh() {

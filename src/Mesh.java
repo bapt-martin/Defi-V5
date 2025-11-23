@@ -42,10 +42,6 @@ public class Mesh {
         return matProj;
     }
 
-//    public void setMatProj(int i, int j, double value) {
-//        this.matProj.getMatrix()[i][j] = value;
-//    }
-
     public List<Vertex3D> getVertices() {
         return vertices;
     }
@@ -74,6 +70,4 @@ public class Mesh {
                 "matProj=" + Arrays.toString(matProj.getMatrix()) +
                 '}';
     }
-
-
 }

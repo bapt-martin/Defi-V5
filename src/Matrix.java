@@ -1,5 +1,3 @@
-import java.util.Vector;
-
 import static java.lang.Math.*;
 
 public class Matrix {
@@ -13,14 +11,13 @@ public class Matrix {
         this.matrix = new double[nbRow][nbCol];
     }
 
-    public static Matrix matrixCreatePointAt(Vertex3D vertPosition, Vertex3D vertTarget, Vertex3D vertUp) {
+    public static Matrix matCreateCamReferentiel(Vertex3D vertPosition, Vertex3D vertTarget, Vertex3D vertUp) {
         //New forward direction
         Vertex3D vertNewForward = Vertex3D.vertexSubtraction(vertTarget, vertPosition);
         vertNewForward.vertexNormalisation();
 
         //New up direction
-        Vertex3D a = new Vertex3D(vertNewForward);
-        a.vertexMultiplication(Vertex3D.dotProduct(vertUp, vertNewForward));
+        Vertex3D a = Vertex3D.vertexMultiplication(Vertex3D.dotProduct(vertUp, vertNewForward),vertNewForward);
         Vertex3D vertNewUp = Vertex3D.vertexSubtraction(vertUp, a);
         vertNewUp.vertexNormalisation();
 
@@ -65,16 +62,16 @@ public class Matrix {
         return matrix;
     }
 
-    public static Matrix matrixCreateRotationZ4x4 (double theta){
-        Matrix matRotZ = new Matrix();
-        matRotZ.getMatrix()[0][0] = cos(theta);
-        matRotZ.getMatrix()[0][1] = sin(theta);
-        matRotZ.getMatrix()[1][0] = -sin(theta);
-        matRotZ.getMatrix()[1][1] = cos(theta);
-        matRotZ.getMatrix()[2][2] = 1;
-        matRotZ.getMatrix()[3][3] = 1;
+    public static Matrix matrixCreateRotationX4x4 (double theta){
+        Matrix matRotX = new Matrix();
+        matRotX.getMatrix()[0][0] = 1;
+        matRotX.getMatrix()[1][1] = cos(theta);
+        matRotX.getMatrix()[1][2] = sin(theta);
+        matRotX.getMatrix()[2][1] = -sin(theta);
+        matRotX.getMatrix()[2][2] = cos(theta);
+        matRotX.getMatrix()[3][3] = 1;
 
-        return matRotZ;
+        return matRotX;
     }
 
     public static Matrix matrixCreateRotationY4x4(double theta) {
@@ -89,21 +86,59 @@ public class Matrix {
         return matRotY;
     }
 
-    public static Matrix matrixCreateRotationX4x4 (double theta){
-        Matrix matRotX = new Matrix();
-        matRotX.getMatrix()[0][0] = 1;
-        matRotX.getMatrix()[1][1] = cos(theta);
-        matRotX.getMatrix()[1][2] = sin(theta);
-        matRotX.getMatrix()[2][1] = -sin(theta);
-        matRotX.getMatrix()[2][2] = cos(theta);
-        matRotX.getMatrix()[3][3] = 1;
+    public static Matrix matrixCreateRotationZ4x4 (double theta){
+        Matrix matRotZ = new Matrix();
+        matRotZ.getMatrix()[0][0] = cos(theta);
+        matRotZ.getMatrix()[0][1] = sin(theta);
+        matRotZ.getMatrix()[1][0] = -sin(theta);
+        matRotZ.getMatrix()[1][1] = cos(theta);
+        matRotZ.getMatrix()[2][2] = 1;
+        matRotZ.getMatrix()[3][3] = 1;
 
-        return matRotX;
+        return matRotZ;
     }
+
+    public static Matrix matrixCreateRotationAroundAxis4x4(double theta, Vertex3D axis) {
+        axis.vertexNormalisation(); // To ensure the rotation axis is normalized
+
+        double ux = axis.getX();
+        double uy = axis.getY();
+        double uz = axis.getZ();
+
+        double cos = Math.cos(theta);
+        double sin = Math.sin(theta);
+
+        Matrix mat = new Matrix();
+
+        mat.getMatrix()[0][0] = cos + ux*ux*(1 - cos);
+        mat.getMatrix()[0][1] = ux*uy*(1 - cos) - uz*sin;
+        mat.getMatrix()[0][2] = ux*uz*(1 - cos) + uy*sin;
+        mat.getMatrix()[0][3] = 0;
+
+        mat.getMatrix()[1][0] = uy*ux*(1 - cos) + uz*sin;
+        mat.getMatrix()[1][1] = cos + uy*uy*(1 - cos);
+        mat.getMatrix()[1][2] = uy*uz*(1 - cos) - ux*sin;
+        mat.getMatrix()[1][3] = 0;
+
+        mat.getMatrix()[2][0] = uz*ux*(1 - cos) - uy*sin;
+        mat.getMatrix()[2][1] = uz*uy*(1 - cos) + ux*sin;
+        mat.getMatrix()[2][2] = cos + uz*uz*(1 - cos);
+        mat.getMatrix()[2][3] = 0;
+
+        mat.getMatrix()[3][0] = 0;
+        mat.getMatrix()[3][1] = 0;
+        mat.getMatrix()[3][2] = 0;
+        mat.getMatrix()[3][3] = 1;
+
+        return mat;
+    }
+
+
+
 
     public static Matrix matrixCreateProjection4x4 (double fNear, double fFar, double fFov, int height, int width) {
         double q = fFar / (fFar - fNear);
-        double aspectRatio = (double) height / width;
+        double aspectRatio = (double) width / height;
         double scalingFactorRad = 1 / tan(fFov * 0.5 / 180 * Math.PI);
 
         Matrix matProj = new Matrix();
@@ -120,6 +155,7 @@ public class Matrix {
     public static Matrix matrixMultiplication (Matrix mat1, Matrix mat2 ) {
         int nbRow = mat1.getMatrix().length;
         int nbCol = mat2.getMatrix()[0].length;
+
         Matrix matrix = new Matrix(nbRow, nbCol);
         for (int i = 0; i < nbRow; i++) {
             for (int j = 0; j < nbCol; j++) {
@@ -132,6 +168,7 @@ public class Matrix {
 
     public static Matrix matrixCreateTranslation4x4(double x,double y, double z) {
         Matrix matrixTranslation = matrixCreateIdentity(4,4);
+
         matrixTranslation.getMatrix()[3][0] = x;
         matrixTranslation.getMatrix()[3][1] = y;
         matrixTranslation.getMatrix()[3][2] = z;
@@ -139,7 +176,12 @@ public class Matrix {
         return matrixTranslation;
     }
 
-
+    public void printMatrix() {
+        for (int i = 0; i < 4; i++) {
+            System.out.printf("| %8.4f %8.4f %8.4f %8.4f |\n",
+                    this.getMatrix()[i][0], this.getMatrix()[i][1], this.getMatrix()[i][2], this.getMatrix()[i][3]);
+        }
+    }
 
     public double[][] getMatrix() {
         return matrix;

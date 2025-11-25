@@ -1,5 +1,7 @@
 import javax.swing.*;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.nio.file.Paths;
@@ -24,7 +26,7 @@ public class Engine3D extends JPanel implements KeyListener {
     private double cameraRoll;
 
     private final boolean[] keysPressed = new boolean[256];
-    private final double translationCameraSpeed = 1;
+    private final double translationCameraSpeed = 0.1;
     private final double rotationCameraSpeed = 0.05
             ;
 
@@ -60,7 +62,7 @@ public class Engine3D extends JPanel implements KeyListener {
         double fFov = 90;
 
         // Projection matrix coefficient definition initialisation
-        this.mesh.setMatProj(Matrix.matrixCreateProjection4x4(fNear,fFar,fFov,heightInit,widthInit));
+        this.mesh.setMatProj(Matrix.matCreateProjection4x4(fNear,fFar,fFov,heightInit,widthInit));
 //        printMatrix(this.mesh.getMatProj());
 
         this.timeLoop = new Timer(16, e -> repaint());
@@ -81,7 +83,7 @@ public class Engine3D extends JPanel implements KeyListener {
             double fFar = 1000;
             double fFov = 90;
 
-            mesh.setMatProj(Matrix.matrixCreateProjection4x4(fNear, fFar, fFov, windowHeight, windowWidth));
+            mesh.setMatProj(Matrix.matCreateProjection4x4(fNear, fFar, fFov, windowHeight, windowWidth));
         }
 
 
@@ -90,7 +92,7 @@ public class Engine3D extends JPanel implements KeyListener {
         deltaTime = (now - lastFrameTime) / 1_000_000_000.0; // secondes
         lastFrameTime = System.nanoTime();
 
-        System.out.println("Elapsed time : " + elapsedTime + ", delta Time : " + deltaTime);
+//        System.out.println("Elapsed time : " + elapsedTime + ", delta Time : " + deltaTime);
 
         // Actualisation of theta
 //        this.theta += 0.05;
@@ -98,31 +100,28 @@ public class Engine3D extends JPanel implements KeyListener {
 
         // ROTATION OF THE OBJECT IN THE WORLD
         // Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matrixCreateRotationZ4x4(this.theta + Math.PI);
+        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.theta + Math.PI);
 
         // Rotation matrices Y-axis
-        Matrix matRotY = Matrix.matrixCreateRotationY4x4(this.theta * 0.5);
+        Matrix matRotY = Matrix.matCreateRotationY4x4(this.theta * 0.5);
 
         // Rotation matrices X-axis
-        Matrix matRotX = Matrix.matrixCreateRotationX4x4(this.theta * 1.5);
+        Matrix matRotX = Matrix.matCreateRotationX4x4(this.theta * 1.5);
 
         // TOTAL ROTATION
-        Matrix matRotationTot = Matrix.matrixMultiplication(matRotZ, Matrix.matrixMultiplication(matRotX,matRotY));
+        Matrix matRotationTot = Matrix.matMultiplication(matRotZ, Matrix.matMultiplication(matRotX,matRotY));
 
 
         // Z-Axis Offset
-        Matrix matTranslation = Matrix.matrixCreateTranslation4x4(0,0,16);
+        Matrix matTranslation = Matrix.matCreateTranslation4x4(0,0,16);
 
 
         // COMBINATION ROTATION + TRANSLATION
-        Matrix matWorld = Matrix.matrixMultiplication(matRotationTot,matTranslation);
+        Matrix matWorld = Matrix.matMultiplication(matRotationTot,matTranslation);
 
 //        this.vertLookDir.setX(0); normcamdirection
 //        this.vertLookDir.setY(0);
 //        this.vertLookDir.setZ(1);
-
-
-
 
 //        Vertex3D vertTarget = Vertex3D.vertexAddition(this.vertCamera,this.vertLookDir);
 
@@ -132,19 +131,19 @@ public class Engine3D extends JPanel implements KeyListener {
         Vertex3D vertUp     = new Vertex3D(0,1,0);
         Vertex3D vertRight  = new Vertex3D(1,0,0);
 
-        Matrix matCameraRotYaw   = Matrix.matrixCreateRotationAroundAxis4x4(cameraYaw,vertUp);
+        Matrix matCameraRotYaw   = Matrix.matCreateRotationAroundAxis4x4(cameraYaw,vertUp);
 
         Vertex3D vertTargetY = Vertex3D.vertexMatrixMultiplication(vertTarget,matCameraRotYaw);
         Vertex3D vertRightY  = Vertex3D.vertexMatrixMultiplication(vertRight,matCameraRotYaw);
         Vertex3D vertUpY     = Vertex3D.vertexMatrixMultiplication(vertUp,matCameraRotYaw);
 
-        Matrix matCameraRotPitch = Matrix.matrixCreateRotationAroundAxis4x4(cameraPitch,vertRightY);
+        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(cameraPitch,vertRightY);
 
         Vertex3D vertTargetYP = Vertex3D.vertexMatrixMultiplication(vertTargetY,matCameraRotPitch);
         Vertex3D vertRightYP  = Vertex3D.vertexMatrixMultiplication(vertRightY,matCameraRotPitch);
         Vertex3D vertUpYP     = Vertex3D.vertexMatrixMultiplication(vertUpY,matCameraRotPitch);
 
-        Matrix matCameraRotRoll  = Matrix.matrixCreateRotationAroundAxis4x4(cameraRoll,vertTargetYP);
+        Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(cameraRoll,vertTargetYP);
 
         Vertex3D vertTargetYPR = Vertex3D.vertexMatrixMultiplication(vertTargetYP,matCameraRotRoll);
         Vertex3D vertRightYPR  = Vertex3D.vertexMatrixMultiplication(vertRightYP,matCameraRotRoll);
@@ -162,14 +161,13 @@ public class Engine3D extends JPanel implements KeyListener {
 
 
         // View matrix for the camera
-        Matrix matWorldCamera = Matrix.matrixQuickInverse(matCameraWorld);
-
+        Matrix matWorldCamera = Matrix.matQuickInverse(matCameraWorld);
 
         // Triangle projection and drawing
         List<Triangle> trisToRaster = new ArrayList<Triangle>();
         for (Triangle triangleToProject : mesh.getTris()) {
             Triangle triTransformed = new Triangle();
-            Triangle triProjected = new Triangle();
+//            Triangle triProjected = new Triangle();
             Triangle triViewed = new Triangle();
 
             // Z-axis, Y-axis and X-axis Rotation
@@ -190,7 +188,7 @@ public class Engine3D extends JPanel implements KeyListener {
             // Checking if the ray of the camera is in sight of the normale
             if (Vertex3D.dotProduct(normal, vCameraRay)< 0) {
 
-                Vertex3D lightDirection = new Vertex3D(-1,-1,-1); // Pseudo definition of the light source
+                Vertex3D lightDirection = new Vertex3D(0,0,-1); // Pseudo definition of the light source
                 lightDirection.vertexNormalisation();
 
                 double dpLightNorm = Vertex3D.dotProduct(normal,lightDirection);
@@ -205,36 +203,54 @@ public class Engine3D extends JPanel implements KeyListener {
                 triViewed.getVertices()[2] = Vertex3D.vertexMatrixMultiplication(triTransformed.getVertices()[2],matWorldCamera);
                 triViewed.setColor(triTransformed.getColor()); // Color transfer
 
-                // Projecting 3D into 2D
-                triProjected.getVertices()[0] = Vertex3D.vertexMatrixMultiplication(triViewed.getVertices()[0], this.mesh.getMatProj());
-                triProjected.getVertices()[1] = Vertex3D.vertexMatrixMultiplication(triViewed.getVertices()[1], this.mesh.getMatProj());
-                triProjected.getVertices()[2] = Vertex3D.vertexMatrixMultiplication(triViewed.getVertices()[2], this.mesh.getMatProj());
-                triProjected.setColor(triViewed.getColor()); // Color transfer
+                Triangle[] clipped = new Triangle[2];
+                clipped[0] = new Triangle();
+                clipped[1] = new Triangle();
 
-                // Normalization of the vertex
-                triProjected.getVertices()[0] = Vertex3D.vertexDivision(triProjected.getVertices()[0].getW(),triProjected.getVertices()[0]);
-                triProjected.getVertices()[1] = Vertex3D.vertexDivision(triProjected.getVertices()[1].getW(),triProjected.getVertices()[1]);
-                triProjected.getVertices()[2] = Vertex3D.vertexDivision(triProjected.getVertices()[2].getW(),triProjected.getVertices()[2]);
+                 int nbClippedTris = Triangle.trisClippingPlane(new Vertex3D(0,0, 0.1), new Vertex3D(0,0,1), triViewed, clipped[0], clipped[1]);
 
-                // Offset into visible normalised space
-                Vertex3D vOffsetView = new Vertex3D(1,1,0);
+                 for (int n = 0; n < nbClippedTris; n++) {
+                     Triangle triProjected = new Triangle();
+                     // Projecting 3D into 2D
+                     triProjected.getVertices()[0] = Vertex3D.vertexMatrixMultiplication(clipped[n].getVertices()[0], this.mesh.getMatProj());
+                     triProjected.getVertices()[1] = Vertex3D.vertexMatrixMultiplication(clipped[n].getVertices()[1], this.mesh.getMatProj());
+                     triProjected.getVertices()[2] = Vertex3D.vertexMatrixMultiplication(clipped[n].getVertices()[2], this.mesh.getMatProj());
+                     triProjected.setColor(clipped[n].getColor()); // Color transfer
 
-                triProjected.getVertices()[0] = Vertex3D.vertexAddition(triProjected.getVertices()[0], vOffsetView );
-                triProjected.getVertices()[1] = Vertex3D.vertexAddition(triProjected.getVertices()[1], vOffsetView );
-                triProjected.getVertices()[2] = Vertex3D.vertexAddition(triProjected.getVertices()[2], vOffsetView );
+                     // Normalization of the vertex
+                     triProjected.getVertices()[0] = Vertex3D.vertexDivision(triProjected.getVertices()[0].getW(),triProjected.getVertices()[0]);
+                     triProjected.getVertices()[1] = Vertex3D.vertexDivision(triProjected.getVertices()[1].getW(),triProjected.getVertices()[1]);
+                     triProjected.getVertices()[2] = Vertex3D.vertexDivision(triProjected.getVertices()[2].getW(),triProjected.getVertices()[2]);
 
-                // Scaling to screen dimension
-                triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * 0.5 * windowHeight);
-                triProjected.getVertices()[0].setY(triProjected.getVertices()[0].getY() * 0.5 * windowWidth);
+                     // X/Y Inverted so need to put them back???
+//                    triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * -1);
+//                    triProjected.getVertices()[1].setX(triProjected.getVertices()[1].getX() * -1);
+//                    triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * -1);
+//                    triProjected.getVertices()[0].setY(triProjected.getVertices()[0].getY() * -1);
+//                    triProjected.getVertices()[1].setY(triProjected.getVertices()[1].getY() * -1);
+//                    triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * -1);
 
-                triProjected.getVertices()[1].setX(triProjected.getVertices()[1].getX() * 0.5 * windowHeight);
-                triProjected.getVertices()[1].setY(triProjected.getVertices()[1].getY() * 0.5 * windowWidth);
 
-                triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * 0.5 * windowHeight);
-                triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * 0.5 * windowWidth);
+                     // Offset into visible normalised space
+                     Vertex3D vOffsetView = new Vertex3D(1,1,0);
 
-                // Save for later rasterization
-                trisToRaster.add(triProjected);
+                     triProjected.getVertices()[0] = Vertex3D.vertexAddition(triProjected.getVertices()[0], vOffsetView );
+                     triProjected.getVertices()[1] = Vertex3D.vertexAddition(triProjected.getVertices()[1], vOffsetView );
+                     triProjected.getVertices()[2] = Vertex3D.vertexAddition(triProjected.getVertices()[2], vOffsetView );
+
+                     // Scaling to screen dimension
+                     triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * 0.5 * windowHeight);
+                     triProjected.getVertices()[0].setY(triProjected.getVertices()[0].getY() * 0.5 * windowWidth);
+
+                     triProjected.getVertices()[1].setX(triProjected.getVertices()[1].getX() * 0.5 * windowHeight);
+                     triProjected.getVertices()[1].setY(triProjected.getVertices()[1].getY() * 0.5 * windowWidth);
+
+                     triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * 0.5 * windowHeight);
+                     triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * 0.5 * windowWidth);
+
+                     // Save for later rasterization
+                     trisToRaster.add(triProjected);
+                }
             }
         }
 
@@ -245,22 +261,62 @@ public class Engine3D extends JPanel implements KeyListener {
             return Double.compare(meanZ2,meanZ1);
         });
 
-        for (Triangle triBeingDrawn : trisToRaster) {
+        for (Triangle triToClip : trisToRaster) {
+            List<Triangle> clippingQueue = new ArrayList<>();
+            clippingQueue.add(triToClip);
 
-            // Getting back the coordinate to draw the 2D triangle
-            int[] xs = new int[3];
-            int[] ys = new int[3];
+            for (int p = 0; p < 4; p++) {
+                int nbTrisToAdd = 1;
+                List<Triangle> futurTestToClip = new ArrayList<>();
+                for(Triangle test : clippingQueue) {
+                    Triangle[] clipped = new Triangle[2];
+                    clipped[0] = new Triangle();
+                    clipped[1] = new Triangle();
 
-            for (int i = 0; i < 3; i++) {
-                xs[i] = (int) Math.round(triBeingDrawn.getVertices()[i].getX());
-                ys[i] = (int) Math.round(triBeingDrawn.getVertices()[i].getY());
+                    switch (p) {
+                        case 0:
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, 0, 0), new Vertex3D(0, 1, 0), test, clipped[0], clipped[1]);
+                            break;
+                        case 1:
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, windowHeight - 1, 0), new Vertex3D(0, -1, 0), test, clipped[0], clipped[1]);
+                            break;
+                        case 2:
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, 0, 0), new Vertex3D(1, 0, 0), test, clipped[0], clipped[1]);
+                            break;
+                        case 3:
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(windowWidth - 1, 0, 0), new Vertex3D(-1, 0, 0), test, clipped[0], clipped[1]);
+                            break;
+                    }
+
+                    for (int w = 0; w < nbTrisToAdd; w++) {
+                        Triangle temp = new Triangle();
+                        temp.CopyTriangle(clipped[w]);
+                        futurTestToClip.add(temp);
+                    }
+                    System.out.println(nbTrisToAdd);
+                }
+                clippingQueue = futurTestToClip;
+
             }
 
-            g.setColor(triBeingDrawn.getColor()); // Setting the correct color
+            for (Triangle triToDraw : clippingQueue) {
+                // Getting back the coordinate to draw the 2D triangle
+                int[] xs = new int[3];
+                int[] ys = new int[3];
 
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.fillPolygon(xs, ys, 3); // Rasterization pas encore faites
+                for (int i = 0; i < 3; i++) {
+                    xs[i] = (int) Math.round(triToDraw.getVertices()[i].getX());
+                    ys[i] = (int) Math.round(triToDraw.getVertices()[i].getY());
+                }
+
+                g.setColor(triToDraw.getColor()); // Setting the correct color
+
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2.fillPolygon(xs, ys, 3); // Rasterization pas encore faites
+                g2.setColor(Color.BLACK);
+                g2.drawPolygon(xs, ys, 3);
+            }
         }
 
     }

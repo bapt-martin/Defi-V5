@@ -34,6 +34,18 @@ public class Vertex3D {
         this.w = other.w;
     }
 
+    public static Vertex3D vert_IntersectPlane (Vertex3D planePoint, Vertex3D planeNorm, Vertex3D lineStart, Vertex3D lineEnd) {
+        planeNorm.vertexNormalisation();
+        double planeOrigin = -Vertex3D.dotProduct(planeNorm, planePoint);
+        double ad = Vertex3D.dotProduct(lineStart,planeNorm);
+        double bd = Vertex3D.dotProduct(lineEnd,planeNorm);
+        double lengthIntersecting = (-planeOrigin - ad) / (bd - ad);
+        Vertex3D lineStartToEnd = Vertex3D.vertexSubtraction(lineEnd, lineStart);
+        Vertex3D lineIntersecting = Vertex3D.vertexMultiplication(lengthIntersecting,lineStartToEnd);
+
+        return Vertex3D.vertexAddition(lineStart, lineIntersecting);
+    }
+
     public static double vertexLength(Vertex3D vertIn) {
         double res = sqrt(vertIn.getX()*vertIn.getX() + vertIn.getY()*vertIn.getY() + vertIn.getZ()*vertIn.getZ());
 

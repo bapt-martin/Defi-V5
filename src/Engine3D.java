@@ -53,7 +53,7 @@ public class Engine3D extends JPanel implements KeyListener {
         addKeyListener(this);
 
         // .OBJ file reading + construction of the 3D triangle to render
-        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\obj model\\axis.obj"),this.mesh);
+        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\obj model\\teapot.obj"),this.mesh);
         this.mesh.triConstruct();
 
         // Projection matrix coefficient value(a require)
@@ -95,12 +95,12 @@ public class Engine3D extends JPanel implements KeyListener {
 //        System.out.println("Elapsed time : " + elapsedTime + ", delta Time : " + deltaTime);
 
         // Actualisation of theta
-//        this.theta += 0.05;
+        this.theta += 0.05;
 //        System.out.println(this.theta);
 
         // ROTATION OF THE OBJECT IN THE WORLD
         // Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.theta + Math.PI);
+        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.theta);
 
         // Rotation matrices Y-axis
         Matrix matRotY = Matrix.matCreateRotationY4x4(this.theta * 0.5);
@@ -223,12 +223,12 @@ public class Engine3D extends JPanel implements KeyListener {
                      triProjected.getVertices()[2] = Vertex3D.vertexDivision(triProjected.getVertices()[2].getW(),triProjected.getVertices()[2]);
 
                      // X/Y Inverted so need to put them back???
-//                    triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * -1);
-//                    triProjected.getVertices()[1].setX(triProjected.getVertices()[1].getX() * -1);
-//                    triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * -1);
-//                    triProjected.getVertices()[0].setY(triProjected.getVertices()[0].getY() * -1);
-//                    triProjected.getVertices()[1].setY(triProjected.getVertices()[1].getY() * -1);
-//                    triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * -1);
+                    triProjected.getVertices()[0].setX(triProjected.getVertices()[0].getX() * -1);
+                    triProjected.getVertices()[1].setX(triProjected.getVertices()[1].getX() * -1);
+                    triProjected.getVertices()[2].setX(triProjected.getVertices()[2].getX() * -1);
+                    triProjected.getVertices()[0].setY(triProjected.getVertices()[0].getY() * -1);
+                    triProjected.getVertices()[1].setY(triProjected.getVertices()[1].getY() * -1);
+                    triProjected.getVertices()[2].setY(triProjected.getVertices()[2].getY() * -1);
 
 
                      // Offset into visible normalised space
@@ -261,6 +261,7 @@ public class Engine3D extends JPanel implements KeyListener {
             return Double.compare(meanZ2,meanZ1);
         });
 
+        int nbTriPerFrame = 0;
         for (Triangle triToClip : trisToRaster) {
             List<Triangle> clippingQueue = new ArrayList<>();
             clippingQueue.add(triToClip);
@@ -293,7 +294,7 @@ public class Engine3D extends JPanel implements KeyListener {
                         temp.CopyTriangle(clipped[w]);
                         futurTestToClip.add(temp);
                     }
-                    System.out.println(nbTrisToAdd);
+                    //System.out.println(nbTrisToAdd);
                 }
                 clippingQueue = futurTestToClip;
 
@@ -314,8 +315,9 @@ public class Engine3D extends JPanel implements KeyListener {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
                 g2.fillPolygon(xs, ys, 3); // Rasterization pas encore faites
-                g2.setColor(Color.BLACK);
-                g2.drawPolygon(xs, ys, 3);
+//                g2.setColor(Color.BLACK);
+//                g2.drawPolygon(xs, ys, 3);
+                System.out.println(nbTriPerFrame++);
             }
         }
 
@@ -340,24 +342,24 @@ public class Engine3D extends JPanel implements KeyListener {
         // TRANSLATION
         // Q = Left
         if (keysPressed[KeyEvent.VK_Q]) {
-            vertCamPosition = Vertex3D.vertexSubtraction(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamRight));
+            vertCamPosition = Vertex3D.vertexAddition(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamRight));
             //vertCamera = Vertex3D.vertexSubtraction(vertCamera, Vertex3D.vertexMultiplication(translationCameraSpeed, vertRight));
         }
 
         // D = Right
         if (keysPressed[KeyEvent.VK_D]) {
-            vertCamPosition = Vertex3D.vertexAddition(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamRight));
+            vertCamPosition = Vertex3D.vertexSubtraction(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamRight));
         }
 
         // SHIFT + SPACE = Down
         // SPACE = Up
         if (keysPressed[KeyEvent.VK_SHIFT]) {
             if (keysPressed[KeyEvent.VK_SPACE]) {
-                vertCamPosition = Vertex3D.vertexAddition(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamUp));
+                vertCamPosition = Vertex3D.vertexSubtraction(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamUp));
             }
         } else {
             if (keysPressed[KeyEvent.VK_SPACE]) {
-                vertCamPosition = Vertex3D.vertexSubtraction(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamUp));
+                vertCamPosition = Vertex3D.vertexAddition(vertCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertNormCamUp));
             }
         }
 
@@ -373,22 +375,22 @@ public class Engine3D extends JPanel implements KeyListener {
         // ROTATION
         // UP = Trigo X-Axis rotation Pitch
         if (keysPressed[KeyEvent.VK_UP]) {
-            cameraPitch -= rotationCameraSpeed;
+            cameraPitch += rotationCameraSpeed;
         }
 
         // DOWN = Horaire X-Axis rotation Pitch
         if (keysPressed[KeyEvent.VK_DOWN]) {
-            cameraPitch += rotationCameraSpeed;
+            cameraPitch -= rotationCameraSpeed;
         }
 
         // A = Trigo Y-Axis rotation Yaw
         if (keysPressed[KeyEvent.VK_A]) {
-            cameraYaw += rotationCameraSpeed;
+            cameraYaw -= rotationCameraSpeed;
         }
 
         // D = Horaire Y-Axis rotation Yaw
         if (keysPressed[KeyEvent.VK_E]) {
-            cameraYaw -= rotationCameraSpeed;
+            cameraYaw += rotationCameraSpeed;
         }
 
         // LEFT = Trigo Z-Axis rotation Roll

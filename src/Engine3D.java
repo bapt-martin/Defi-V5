@@ -13,15 +13,6 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 
     private double theta;
 
-    private Vertex3D pointCamPosition;
-    private Vertex3D vertCamDirection;
-    private Vertex3D vertCamUp;
-    private Vertex3D vertCamRight;
-
-    private double cameraPitch;
-    private double cameraYaw;
-    private double cameraRoll;
-
     private Camera camera;
 
     private final boolean[] keysPressed = new boolean[256];
@@ -46,8 +37,6 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         this.camera = new Camera();
 
         this.theta = 0;
-        this.pointCamPosition = new Vertex3D(0,0,1);
-        this.vertCamDirection = new Vertex3D(0);
 
         this.mesh = new Mesh();
         setBackground(Color.BLACK);
@@ -123,8 +112,8 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         int dx = winMousePos.x - (int) winLastMousePosition.getX();
         int dy = winMousePos.y - (int) winLastMousePosition.getY();
 
-        cameraPitch += rotationCameraSpeed * -dy * mouseSensibility;
-        cameraYaw   += rotationCameraSpeed * dx * mouseSensibility;
+        camera.setCamPitch(camera.getCamPitch() +rotationCameraSpeed * -dy * mouseSensibility);
+        camera.setCamYaw(camera.getCamYaw() +rotationCameraSpeed * dx * mouseSensibility);
 
         // Update last position
         winLastMousePosition.setX(winPanelCenter.x);
@@ -210,58 +199,14 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         Matrix matWorld = Matrix.matMultiplication(matRotationTot,matTranslation);
 
         handleKeyPress();
-        //camera.camActualisation();
-
-        Vertex3D vertTarget = new Vertex3D(0,0,1);
-        Vertex3D vertUp     = new Vertex3D(0,1,0);
-        Vertex3D vertRight  = new Vertex3D(1,0,0);
-
-
-        // Rotation arround local Y-axis
-        Matrix matCameraRotYaw   = Matrix.matCreateRotationAroundAxis4x4(cameraYaw,vertUp);
-
-        Vertex3D vertTargetY = Vertex3D.vertexMatrixMultiplication(vertTarget,matCameraRotYaw);
-        Vertex3D vertRightY  = Vertex3D.vertexMatrixMultiplication(vertRight,matCameraRotYaw);
-        Vertex3D vertUpY     = Vertex3D.vertexMatrixMultiplication(vertUp,matCameraRotYaw);
-
-        vertTargetY.vertexNormalisation();
-        vertRightY.vertexNormalisation();
-        vertUpY.vertexNormalisation();
-
-        // Rotation arround local X-axis
-        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(cameraPitch,vertRightY);
-
-        Vertex3D vertTargetYP = Vertex3D.vertexMatrixMultiplication(vertTargetY,matCameraRotPitch);
-        Vertex3D vertRightYP  = Vertex3D.vertexMatrixMultiplication(vertRightY,matCameraRotPitch);
-        Vertex3D vertUpYP     = Vertex3D.vertexMatrixMultiplication(vertUpY,matCameraRotPitch);
-
-        vertTargetY.vertexNormalisation();
-        vertRightY.vertexNormalisation();
-        vertUpY.vertexNormalisation();
-
-        // Rotation arround local Z-axis
-        Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(cameraRoll,vertTargetYP);
-
-        Vertex3D vertTargetYPR = Vertex3D.vertexMatrixMultiplication(vertTargetYP,matCameraRotRoll);
-        Vertex3D vertRightYPR  = Vertex3D.vertexMatrixMultiplication(vertRightYP,matCameraRotRoll);
-        Vertex3D vertUpYPR     = Vertex3D.vertexMatrixMultiplication(vertUpYP,matCameraRotRoll);
-
-        vertCamDirection = vertTargetYPR;
-        vertCamUp = vertUpYPR;
-        vertCamRight = vertRightYPR;
-
-//        camera.camUpdate();
-//
-//        vertCamDirection = camera.getVertCamDirection();
-//        vertCamUp = camera.getVertCamUp();
-//        vertCamRight = camera.getVertCamRight();
+        camera.camUpdate();
 
 //        System.out.println("target "+vertTarget.toString() +" : " + vertTargetYPR.toString());
 //        System.out.println("right  "+vertRight.toString()  +" : " + vertRightYPR.toString());
 //        System.out.println("up     "+vertUp.toString()     +" : " + vertUpYPR.toString());
 
         // Creation of the camera matrix
-        Matrix matCameraWorld = Matrix.matCreateCamReferentiel(this.pointCamPosition, vertCamDirection, vertCamUp);
+        Matrix matCameraWorld = Matrix.matCreateCamReferentiel(camera.getPointCamPosition(), camera.getVertCamDirection(), camera.getVertCamUp());
 
 
         // View matrix for the camera
@@ -287,7 +232,7 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
             normal.vertexNormalisation();
 
             // Casting the ray of the camera
-            Vertex3D vCameraRay = Vertex3D.vertexSubtraction(triTransformed.getVertices()[0], pointCamPosition);
+            Vertex3D vCameraRay = Vertex3D.vertexSubtraction(triTransformed.getVertices()[0], camera.getPointCamPosition());
 
             // Checking if the ray of the camera is in sight of the normale
             if (Vertex3D.dotProduct(normal, vCameraRay)< 0) {
@@ -433,65 +378,64 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         // TRANSLATION
         // Q = Left
         if (keysPressed[KeyEvent.VK_Q]) {
-            pointCamPosition = Vertex3D.vertexAddition(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamRight));
-            //vertCamera = Vertex3D.vertexSubtraction(vertCamera, Vertex3D.vertexMultiplication(translationCameraSpeed, vertRight));
+            camera.setPointCamPosition(Vertex3D.vertexAddition(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamRight())));
         }
 
         // D = Right
         if (keysPressed[KeyEvent.VK_D]) {
-            pointCamPosition = Vertex3D.vertexSubtraction(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamRight));
+            camera.setPointCamPosition(Vertex3D.vertexSubtraction(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamRight())));
         }
 
         // SHIFT + SPACE = Down
         // SPACE = Up
         if (keysPressed[KeyEvent.VK_SHIFT]) {
             if (keysPressed[KeyEvent.VK_SPACE]) {
-                pointCamPosition = Vertex3D.vertexSubtraction(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamUp));
+                camera.setPointCamPosition(Vertex3D.vertexSubtraction(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamUp())));
             }
         } else {
             if (keysPressed[KeyEvent.VK_SPACE]) {
-                pointCamPosition = Vertex3D.vertexAddition(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamUp));
+                camera.setPointCamPosition(Vertex3D.vertexAddition(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamUp())));
             }
         }
 
         // Z = Forward
         if (keysPressed[KeyEvent.VK_Z]) {
-            pointCamPosition = Vertex3D.vertexAddition(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamDirection));
+            camera.setPointCamPosition(Vertex3D.vertexAddition(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamDirection())));
         }
         // S = Behind
         if (keysPressed[KeyEvent.VK_S]) {
-            pointCamPosition = Vertex3D.vertexSubtraction(pointCamPosition, Vertex3D.vertexMultiplication(translationCameraSpeed, vertCamDirection));
+            camera.setPointCamPosition(Vertex3D.vertexSubtraction(camera.getPointCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getVertCamDirection())));
         }
 
         // ROTATION
         // UP = Trigo X-Axis rotation Pitch
         if (keysPressed[KeyEvent.VK_UP]) {
-            cameraPitch += rotationCameraSpeed * deltaTime;
+            camera.setCamPitch(camera.getCamPitch() + rotationCameraSpeed * deltaTime);
         }
 
         // DOWN = Horaire X-Axis rotation Pitch
         if (keysPressed[KeyEvent.VK_DOWN]) {
-            cameraPitch -= rotationCameraSpeed * deltaTime;
+            camera.setCamPitch(camera.getCamPitch() - rotationCameraSpeed * deltaTime);
         }
 
         // RIGHT = Trigo Y-Axis rotation Yaw
         if (keysPressed[KeyEvent.VK_RIGHT]) {
-            cameraYaw += rotationCameraSpeed * deltaTime;
+            camera.setCamYaw(camera.getCamYaw() + rotationCameraSpeed * deltaTime);
         }
 
         // LEFT = Horaire Y-Axis rotation Yaw
         if (keysPressed[KeyEvent.VK_LEFT]) {
-            cameraYaw -= rotationCameraSpeed * deltaTime;
+            camera.setCamYaw(camera.getCamYaw() - rotationCameraSpeed * deltaTime);
         }
 
         // A = Trigo Z-Axis rotation Roll
         if (keysPressed[KeyEvent.VK_A]) {
-            cameraRoll += rotationCameraSpeed * deltaTime;
+            camera.setCamRoll(camera.getCamRoll() + rotationCameraSpeed * deltaTime);
         }
 
         // E = Horaire Y-Axis rotation Roll
         if (keysPressed[KeyEvent.VK_E]) {
-            cameraRoll -= rotationCameraSpeed * deltaTime;
+            camera.setCamRoll(camera.getCamRoll() + rotationCameraSpeed * deltaTime);
         }
     }
 
@@ -539,34 +483,6 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 
     public double getTheta() {
         return theta;
-    }
-
-    public Vertex3D getPointCamPosition() {
-        return pointCamPosition;
-    }
-
-    public Vertex3D getVertCamDirection() {
-        return vertCamDirection;
-    }
-
-    public Vertex3D getVertCamUp() {
-        return vertCamUp;
-    }
-
-    public Vertex3D getVertCamRight() {
-        return vertCamRight;
-    }
-
-    public double getCameraPitch() {
-        return cameraPitch;
-    }
-
-    public double getCameraYaw() {
-        return cameraYaw;
-    }
-
-    public double getCameraRoll() {
-        return cameraRoll;
     }
 
     public boolean[] getKeysPressed() {

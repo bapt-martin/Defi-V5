@@ -6,33 +6,33 @@ public class Camera {
     private Vertex3D vertCamUp;
     private Vertex3D vertCamRight;
 
-    private double cameraPitch;
-    private double cameraYaw;
-    private double cameraRoll;
+    private double camPitch;
+    private double camYaw;
+    private double camRoll;
 
 
     public Camera() {
-        this.pointCamPosition = new Vertex3D(0, 0, 1);
-        this.vertCamDirection = new Vertex3D(0, 0, 1);
-        this.vertCamUp = new Vertex3D(0, 1, 0);
-        this.vertCamRight = new Vertex3D(1, 0, 0);
-        this.cameraPitch = 0;
-        this.cameraYaw = 0;
-        this.cameraRoll = 0;
+        this.pointCamPosition = new Vertex3D(0, 0, 1,0);
+        this.vertCamDirection = new Vertex3D(0, 0, 1,0);
+        this.vertCamUp = new Vertex3D(0, 1, 0,0);
+        this.vertCamRight = new Vertex3D(1, 0, 0,0);
+        this.camPitch = 0;
+        this.camYaw = 0;
+        this.camRoll = 0;
 
     }
 
-    public Camera(Vertex3D vertCamPosition, double cameraPitch, double cameraYaw, double cameraRoll, Vertex3D vertNormCamDirection) {
+    public Camera(Vertex3D vertCamPosition, double camPitch, double camYaw, double camRoll, Vertex3D vertNormCamDirection) {
         this.pointCamPosition = vertCamPosition;
-        this.cameraPitch = cameraPitch;
-        this.cameraYaw = cameraYaw;
-        this.cameraRoll = cameraRoll;
+        this.camPitch = camPitch;
+        this.camYaw = camYaw;
+        this.camRoll = camRoll;
         this.vertCamDirection = vertNormCamDirection;
     }
 
     public void camUpdate() {
         // Rotation arround local Y-axis
-        Matrix matCameraRotYaw = Matrix.matCreateRotationAroundAxis4x4(cameraYaw,vertCamUp);
+        Matrix matCameraRotYaw = Matrix.matCreateRotationAroundAxis4x4(camYaw,vertCamUp);
 
         Vertex3D vertTargetY = Vertex3D.vertexMatrixMultiplication(vertCamDirection,matCameraRotYaw);
         Vertex3D vertRightY  = Vertex3D.vertexMatrixMultiplication(vertCamRight,matCameraRotYaw);
@@ -43,7 +43,7 @@ public class Camera {
         vertUpY.vertexNormalisation();
 
         // Rotation arround local X-axis
-        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(cameraPitch,vertRightY);
+        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(camPitch,vertRightY);
 
         Vertex3D vertTargetYP = Vertex3D.vertexMatrixMultiplication(vertTargetY,matCameraRotPitch);
         Vertex3D vertRightYP  = Vertex3D.vertexMatrixMultiplication(vertRightY,matCameraRotPitch);
@@ -54,7 +54,7 @@ public class Camera {
         vertUpYP.vertexNormalisation();
 
         // Rotation arround local Z-axis
-        Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(cameraRoll,vertTargetYP);
+        Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(camRoll,vertTargetYP);
 
         Vertex3D vertTargetYPR = Vertex3D.vertexMatrixMultiplication(vertTargetYP,matCameraRotRoll);
         Vertex3D vertRightYPR  = Vertex3D.vertexMatrixMultiplication(vertRightYP,matCameraRotRoll);
@@ -114,28 +114,28 @@ public class Camera {
         this.vertCamRight = vertCamRight;
     }
 
-    public double getCameraPitch() {
-        return cameraPitch;
+    public double getCamPitch() {
+        return camPitch;
     }
 
-    public void setCameraPitch(double cameraPitch) {
-        this.cameraPitch = cameraPitch;
+    public void setCamPitch(double camPitch) {
+        this.camPitch = camPitch;
     }
 
-    public double getCameraYaw() {
-        return cameraYaw;
+    public double getCamYaw() {
+        return camYaw;
     }
 
-    public void setCameraYaw(double cameraYaw) {
-        this.cameraYaw = cameraYaw;
+    public void setCamYaw(double camYaw) {
+        this.camYaw = camYaw;
     }
 
-    public double getCameraRoll() {
-        return cameraRoll;
+    public double getCamRoll() {
+        return camRoll;
     }
 
-    public void setCameraRoll(double cameraRoll) {
-        this.cameraRoll = cameraRoll;
+    public void setCamRoll(double camRoll) {
+        this.camRoll = camRoll;
     }
 }
 

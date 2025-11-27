@@ -7,10 +7,18 @@ public class Vertex3D {
     private double w;
 
     public Vertex3D() {
-        x = 0;
-        y = 0;
-        z = 0;
-        w = 1;
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.w = 1;
+    }
+
+    // To create a vector not affected by translation
+    public Vertex3D(double w) {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.w = 0;
     }
 
     public Vertex3D(double x, double y, double z) {
@@ -33,6 +41,7 @@ public class Vertex3D {
         this.z = other.z;
         this.w = other.w;
     }
+
 
     public static Vertex3D vert_IntersectPlane (Vertex3D planePoint, Vertex3D planeNorm, Vertex3D lineStart, Vertex3D lineEnd) {
         planeNorm.vertexNormalisation();

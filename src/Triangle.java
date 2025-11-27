@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.awt.Color.WHITE;
+import static java.awt.Color.*;
 
 public class Triangle {
     private final Vertex3D[] vertices = new Vertex3D[3];
@@ -13,14 +13,14 @@ public class Triangle {
         vertices[0] = new Vertex3D();
         vertices[1] = new Vertex3D();
         vertices[2] = new Vertex3D();
-        this.color = WHITE;
+        this.color = BLUE;
     }
 
     public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3) {
         vertices[0] = p1;
         vertices[1] = p2;
         vertices[2] = p3;
-        color = WHITE;
+        color = BLACK;
     }
 
     public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Color color) {
@@ -54,40 +54,14 @@ public class Triangle {
         Vertex3D[] pointsInside  = new Vertex3D[3]; int nbPointsInside = 0;
         Vertex3D[] pointsOutside = new Vertex3D[3]; int nbPointsOutside = 0;
 
-        double[] pointsToClassify = new double[3];
-
-        double d0 = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[0]);
-        double d1 = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[1]);
-        double d2 = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[2]);
-
-        pointsToClassify[0] = d0;
-        pointsToClassify[1] = d1;
-        pointsToClassify[2] = d2;
-
-//        for (double distPoint : pointsToClassify) {
-//            if (distPoint >= 0) {
-//                pointsInside[nbPointsInside++] = triIn.getVertices()[nbPointsInside + nbPointsOutside - 1];
-//            } else {
-//                pointsOutside[nbPointsOutside++] = triIn.getVertices()[nbPointsInside + nbPointsOutside - 1];
-//            }
-//        }
-
-        if (d0 >= 0) {
-            pointsInside[nbPointsInside++] = triIn.getVertices()[0];
-        } else {
-            pointsOutside[nbPointsOutside++] = triIn.getVertices()[0];
-        }
-
-        if (d1 >= 0) {
-            pointsInside[nbPointsInside++] = triIn.getVertices()[1];
-        } else {
-            pointsOutside[nbPointsOutside++] = triIn.getVertices()[1];
-        }
-
-        if (d2 >= 0) {
-            pointsInside[nbPointsInside++] = triIn.getVertices()[2];
-        } else {
-            pointsOutside[nbPointsOutside++] = triIn.getVertices()[2];
+        // Classification of the point
+        for (int i = 0; i < 3; i++) {
+            double distPoint = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[i]);
+            if (distPoint >= 0) {
+                pointsInside[nbPointsInside++] = triIn.getVertices()[i];
+            } else {
+                pointsOutside[nbPointsOutside++] = triIn.getVertices()[i];
+            }
         }
 
         if (nbPointsInside == 3) {
@@ -97,8 +71,8 @@ public class Triangle {
         }
         if (nbPointsInside == 1) {
             // The triangle simply becomme a smaller triangle
-//            triOut1.setColor(triIn.getColor());
-            triOut1.setColor(Color.RED);
+            triOut1.setColor(triIn.getColor());
+//            triOut1.setColor(Color.RED);
 
             triOut1.getVertices()[0] = pointsInside[0];
             triOut1.getVertices()[1] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[0],pointsOutside[0]);
@@ -106,10 +80,10 @@ public class Triangle {
             return 1;
         }
         if (nbPointsInside == 2) {
-//            triOut1.setColor(triIn.getColor());
-//            triOut2.setColor(triIn.getColor());
-            triOut1.setColor(Color.GREEN);
-            triOut2.setColor(Color.BLUE);
+            triOut1.setColor(triIn.getColor());
+            triOut2.setColor(triIn.getColor());
+//            triOut1.setColor(Color.GREEN);
+//            triOut2.setColor(Color.BLUE);
 
             triOut1.getVertices()[0] = pointsInside[0];
             triOut1.getVertices()[1] = pointsInside[1];

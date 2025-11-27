@@ -12,8 +12,10 @@ public class Matrix {
     }
 
     public static Matrix matCreateCamReferentiel(Vertex3D vertPosition, Vertex3D vertTarget, Vertex3D vertUp) {
+        Vertex3D vertTranslatedTarget = Vertex3D.vertexAddition(vertPosition, vertTarget);
+
         //New forward direction
-        Vertex3D vertNewForward = Vertex3D.vertexSubtraction(vertTarget, vertPosition);
+        Vertex3D vertNewForward = Vertex3D.vertexSubtraction(vertTranslatedTarget, vertPosition);
         vertNewForward.vertexNormalisation();
 
         //New up direction
@@ -99,7 +101,7 @@ public class Matrix {
     }
 
     public static Matrix matCreateRotationAroundAxis4x4(double theta, Vertex3D axis) {
-        axis.vertexNormalisation(); // To ensure the rotation axis is normalized
+        axis.vertexNormalisation();
 
         double ux = axis.getX();
         double uy = axis.getY();
@@ -136,7 +138,7 @@ public class Matrix {
 
 
 
-    public static Matrix matCreateProjection4x4(double fNear, double fFar, double fFov, int height, int width) {
+    public static Matrix matCreateProjection4x4(double fNear, double fFar, double fFov, int width, int height) {
         double q = fFar / (fFar - fNear);
         double aspectRatio = (double) width / height;
         double scalingFactorRad = 1 / tan(fFov * 0.5 / 180 * Math.PI);

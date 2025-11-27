@@ -22,6 +22,8 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
     private double cameraYaw;
     private double cameraRoll;
 
+    private Camera camera;
+
     private final boolean[] keysPressed = new boolean[256];
     private final double translationCameraSpeed = 0.1;
     private final double rotationCameraSpeed = 0.5;
@@ -40,6 +42,8 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
     public Engine3D(int widthInit, int heightInit) {
         this.winWidth = widthInit;
         this.winHeight = heightInit;
+
+        this.camera = new Camera();
 
         this.theta = 0;
         this.pointCamPosition = new Vertex3D(0,0,1);
@@ -101,6 +105,10 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 
     @Override
     public void mouseMoved(MouseEvent e) {
+        handleMouseMoving(e);
+    }
+
+    private void handleMouseMoving(MouseEvent e) {
         Point winPanelCenter = new Point(winWidth /2, winHeight /2);
         Point winMousePos = e.getPoint();
 
@@ -169,24 +177,20 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        
-        
+
         // Real time aspect actualisation
         Camera.matProjectionActualisation(g, this);
-
 
         long now = System.nanoTime();
         elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
         deltaTime = (now - lastFrameTime) / 1_000_000_000.0; // secondes
         lastFrameTime = now;
 
-//        System.out.println("Elapsed time : " + elapsedTime + ", delta Time : " + deltaTime);
-
         // Actualisation of theta
 //        this.theta += 0.05;
 //        System.out.println(this.theta);
 
-        // ROTATION OF THE OBJECT IN THE WORLD
+        // ROTATION OF THE OBJECT IN THE WORLD (adding a rotation mat per object in the futur)
         // Rotation matrices Z-axis
         Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.theta);
 
@@ -199,16 +203,14 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         // TOTAL ROTATION
         Matrix matRotationTot = Matrix.matMultiplication(matRotZ, Matrix.matMultiplication(matRotX,matRotY));
 
-
         // Z-Axis Offset
         Matrix matTranslation = Matrix.matCreateTranslation4x4(0,0,16);
-
 
         // COMBINATION ROTATION + TRANSLATION
         Matrix matWorld = Matrix.matMultiplication(matRotationTot,matTranslation);
 
-
         handleKeyPress();
+        //camera.camActualisation();
 
         Vertex3D vertTarget = new Vertex3D(0,0,1);
         Vertex3D vertUp     = new Vertex3D(0,1,0);
@@ -247,6 +249,12 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         vertCamDirection = vertTargetYPR;
         vertCamUp = vertUpYPR;
         vertCamRight = vertRightYPR;
+
+//        camera.camUpdate();
+//
+//        vertCamDirection = camera.getVertCamDirection();
+//        vertCamUp = camera.getVertCamUp();
+//        vertCamRight = camera.getVertCamRight();
 
 //        System.out.println("target "+vertTarget.toString() +" : " + vertTargetYPR.toString());
 //        System.out.println("right  "+vertRight.toString()  +" : " + vertRightYPR.toString());

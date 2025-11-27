@@ -30,6 +30,45 @@ public class Camera {
         this.vertCamDirection = vertNormCamDirection;
     }
 
+    public void camUpdate() {
+        // Rotation arround local Y-axis
+        Matrix matCameraRotYaw = Matrix.matCreateRotationAroundAxis4x4(cameraYaw,vertCamUp);
+
+        Vertex3D vertTargetY = Vertex3D.vertexMatrixMultiplication(vertCamDirection,matCameraRotYaw);
+        Vertex3D vertRightY  = Vertex3D.vertexMatrixMultiplication(vertCamRight,matCameraRotYaw);
+        Vertex3D vertUpY     = Vertex3D.vertexMatrixMultiplication(vertCamUp,matCameraRotYaw);
+
+        vertTargetY.vertexNormalisation();
+        vertRightY.vertexNormalisation();
+        vertUpY.vertexNormalisation();
+
+        // Rotation arround local X-axis
+        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(cameraPitch,vertRightY);
+
+        Vertex3D vertTargetYP = Vertex3D.vertexMatrixMultiplication(vertTargetY,matCameraRotPitch);
+        Vertex3D vertRightYP  = Vertex3D.vertexMatrixMultiplication(vertRightY,matCameraRotPitch);
+        Vertex3D vertUpYP     = Vertex3D.vertexMatrixMultiplication(vertUpY,matCameraRotPitch);
+
+        vertTargetYP.vertexNormalisation();
+        vertRightYP.vertexNormalisation();
+        vertUpYP.vertexNormalisation();
+
+        // Rotation arround local Z-axis
+        Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(cameraRoll,vertTargetYP);
+
+        Vertex3D vertTargetYPR = Vertex3D.vertexMatrixMultiplication(vertTargetYP,matCameraRotRoll);
+        Vertex3D vertRightYPR  = Vertex3D.vertexMatrixMultiplication(vertRightYP,matCameraRotRoll);
+        Vertex3D vertUpYPR     = Vertex3D.vertexMatrixMultiplication(vertUpYP,matCameraRotRoll);
+
+        vertTargetYPR.vertexNormalisation();
+        vertRightYPR.vertexNormalisation();
+        vertUpYPR.vertexNormalisation();
+
+        vertCamDirection = vertTargetYPR;
+        vertCamUp = vertUpYPR;
+        vertCamRight = vertRightYPR;
+    }
+
     public static void matProjectionActualisation(Graphics g, Engine3D engine3D) {
         if (engine3D.getWidth() != engine3D.getWinWidth() || engine3D.getHeight() != engine3D.getWinHeight()) {
             engine3D.setWinWidth(engine3D.getWidth());

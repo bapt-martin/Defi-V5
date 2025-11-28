@@ -1,3 +1,4 @@
+package engine.math;
 import static java.lang.Math.*;
 
 public class Matrix {
@@ -11,27 +12,27 @@ public class Matrix {
         this.matrix = new double[nbRow][nbCol];
     }
 
-    public static Matrix matCreateCamReferentiel(Vertex3D vertPosition, Vertex3D vertTarget, Vertex3D vertUp) {
-        Vertex3D vertTranslatedTarget = Vertex3D.vertexAddition(vertPosition, vertTarget);
+    public static Matrix matCreateCamReferentiel(Vertex3D pPosition, Vertex3D vTarget, Vertex3D vUp) {
+        Vertex3D pTranslatedTarget = Vertex3D.vertexAddition(pPosition, vTarget);
 
         //New forward direction
-        Vertex3D vertNewForward = Vertex3D.vertexSubtraction(vertTranslatedTarget, vertPosition);
-        vertNewForward.vertexNormalisation();
+        Vertex3D vNewForward = Vertex3D.vertexSubtraction(pTranslatedTarget, pPosition);
+        vNewForward.vertexNormalisation();
 
         //New up direction
-        Vertex3D a = Vertex3D.vertexMultiplication(Vertex3D.dotProduct(vertUp, vertNewForward),vertNewForward);
-        Vertex3D vertNewUp = Vertex3D.vertexSubtraction(vertUp, a);
-        vertNewUp.vertexNormalisation();
+        Vertex3D vScale = Vertex3D.vertexMultiplication(Vertex3D.dotProduct(vUp, vNewForward),vNewForward);
+        Vertex3D vNewUp = Vertex3D.vertexSubtraction(vUp, vScale);
+        vNewUp.vertexNormalisation();
 
         //New right direction
-        Vertex3D vertNewRight = Vertex3D.crossProduct(vertNewUp, vertNewForward);
-        vertNewRight.vertexNormalisation();
+        Vertex3D vNewRight = Vertex3D.crossProduct(vNewUp, vNewForward);
+        vNewRight.vertexNormalisation();
 
         Matrix matPointAt = new Matrix();
-        matPointAt.getMatrix()[0][0] = vertNewRight.getX();   matPointAt.getMatrix()[0][1] = vertNewRight.getY();   matPointAt.getMatrix()[0][2] = vertNewRight.getZ();   matPointAt.getMatrix()[0][3] = 0;
-        matPointAt.getMatrix()[1][0] = vertNewUp.getX();      matPointAt.getMatrix()[1][1] = vertNewUp.getY();      matPointAt.getMatrix()[1][2] = vertNewUp.getZ();      matPointAt.getMatrix()[1][3] = 0;
-        matPointAt.getMatrix()[2][0] = vertNewForward.getX(); matPointAt.getMatrix()[2][1] = vertNewForward.getY(); matPointAt.getMatrix()[2][2] = vertNewForward.getZ(); matPointAt.getMatrix()[2][3] = 0;
-        matPointAt.getMatrix()[3][0] = vertPosition.getX();   matPointAt.getMatrix()[3][1] = vertPosition.getY();   matPointAt.getMatrix()[3][2] = vertPosition.getZ();   matPointAt.getMatrix()[3][3] = 1;
+        matPointAt.getMatrix()[0][0] = vNewRight.getX();   matPointAt.getMatrix()[0][1] = vNewRight.getY();   matPointAt.getMatrix()[0][2] = vNewRight.getZ();   matPointAt.getMatrix()[0][3] = 0;
+        matPointAt.getMatrix()[1][0] = vNewUp.getX();      matPointAt.getMatrix()[1][1] = vNewUp.getY();      matPointAt.getMatrix()[1][2] = vNewUp.getZ();      matPointAt.getMatrix()[1][3] = 0;
+        matPointAt.getMatrix()[2][0] = vNewForward.getX(); matPointAt.getMatrix()[2][1] = vNewForward.getY(); matPointAt.getMatrix()[2][2] = vNewForward.getZ(); matPointAt.getMatrix()[2][3] = 0;
+        matPointAt.getMatrix()[3][0] = pPosition.getX();   matPointAt.getMatrix()[3][1] = pPosition.getY();   matPointAt.getMatrix()[3][2] = pPosition.getZ();   matPointAt.getMatrix()[3][3] = 1;
 
         return matPointAt;
     }
@@ -52,20 +53,22 @@ public class Matrix {
     }
 
     public static Matrix matCreateIdentity(int nbRow, int nbCol) {
-        Matrix matrix = new Matrix(nbRow, nbCol);
+        Matrix matIdentity = new Matrix(nbRow, nbCol);
+
         for (int i = 0; i< nbRow; i++) {
             for (int j= 0; j< nbCol; j++) {
                 if (i == j) {
-                    matrix.getMatrix()[i][j] = 1;
+                    matIdentity.getMatrix()[i][j] = 1;
                 }
             }
         }
 
-        return matrix;
+        return matIdentity;
     }
 
     public static Matrix matCreateRotationX4x4(double theta){
         Matrix matRotX = new Matrix();
+
         matRotX.getMatrix()[0][0] = 1;
         matRotX.getMatrix()[1][1] = cos(theta);
         matRotX.getMatrix()[1][2] = sin(theta);
@@ -78,6 +81,7 @@ public class Matrix {
 
     public static Matrix matCreateRotationY4x4(double theta) {
         Matrix matRotY = new Matrix();
+
         matRotY.getMatrix()[0][0] = Math.cos(theta);
         matRotY.getMatrix()[0][2] = Math.sin(theta);
         matRotY.getMatrix()[1][1] = 1;
@@ -90,6 +94,7 @@ public class Matrix {
 
     public static Matrix matCreateRotationZ4x4(double theta){
         Matrix matRotZ = new Matrix();
+
         matRotZ.getMatrix()[0][0] = cos(theta);
         matRotZ.getMatrix()[0][1] = sin(theta);
         matRotZ.getMatrix()[1][0] = -sin(theta);
@@ -100,72 +105,54 @@ public class Matrix {
         return matRotZ;
     }
 
-    public static Matrix matCreateRotationAroundAxis4x4(double theta, Vertex3D axis) {
-        axis.vertexNormalisation();
+    public static Matrix matCreateRotationAroundAxis4x4(double theta, Vertex3D vAxis) {
+        vAxis.vertexNormalisation();
 
-        double ux = axis.getX();
-        double uy = axis.getY();
-        double uz = axis.getZ();
+        double dUx = vAxis.getX();
+        double dUy = vAxis.getY();
+        double dUz = vAxis.getZ();
 
-        double cos = Math.cos(theta);
-        double sin = Math.sin(theta);
+        double dCos = Math.cos(theta);
+        double dSin = Math.sin(theta);
 
-        Matrix mat = new Matrix();
+        Matrix matRotationAxis = new Matrix();
 
-        mat.getMatrix()[0][0] = cos + ux*ux*(1 - cos);
-        mat.getMatrix()[0][1] = ux*uy*(1 - cos) - uz*sin;
-        mat.getMatrix()[0][2] = ux*uz*(1 - cos) + uy*sin;
-        mat.getMatrix()[0][3] = 0;
+        matRotationAxis.getMatrix()[0][0] = dCos + dUx*dUx*(1 - dCos);
+        matRotationAxis.getMatrix()[0][1] = dUx*dUy*(1 - dCos) - dUz*dSin;
+        matRotationAxis.getMatrix()[0][2] = dUx*dUz*(1 - dCos) + dUy*dSin;
+        matRotationAxis.getMatrix()[0][3] = 0;
 
-        mat.getMatrix()[1][0] = uy*ux*(1 - cos) + uz*sin;
-        mat.getMatrix()[1][1] = cos + uy*uy*(1 - cos);
-        mat.getMatrix()[1][2] = uy*uz*(1 - cos) - ux*sin;
-        mat.getMatrix()[1][3] = 0;
+        matRotationAxis.getMatrix()[1][0] = dUy*dUx*(1 - dCos) + dUz*dSin;
+        matRotationAxis.getMatrix()[1][1] = dCos + dUy*dUy*(1 - dCos);
+        matRotationAxis.getMatrix()[1][2] = dUy*dUz*(1 - dCos) - dUx*dSin;
+        matRotationAxis.getMatrix()[1][3] = 0;
 
-        mat.getMatrix()[2][0] = uz*ux*(1 - cos) - uy*sin;
-        mat.getMatrix()[2][1] = uz*uy*(1 - cos) + ux*sin;
-        mat.getMatrix()[2][2] = cos + uz*uz*(1 - cos);
-        mat.getMatrix()[2][3] = 0;
+        matRotationAxis.getMatrix()[2][0] = dUz*dUx*(1 - dCos) - dUy*dSin;
+        matRotationAxis.getMatrix()[2][1] = dUz*dUy*(1 - dCos) + dUx*dSin;
+        matRotationAxis.getMatrix()[2][2] = dCos + dUz*dUz*(1 - dCos);
+        matRotationAxis.getMatrix()[2][3] = 0;
 
-        mat.getMatrix()[3][0] = 0;
-        mat.getMatrix()[3][1] = 0;
-        mat.getMatrix()[3][2] = 0;
-        mat.getMatrix()[3][3] = 1;
+        matRotationAxis.getMatrix()[3][0] = 0;
+        matRotationAxis.getMatrix()[3][1] = 0;
+        matRotationAxis.getMatrix()[3][2] = 0;
+        matRotationAxis.getMatrix()[3][3] = 1;
 
-        return mat;
+        return matRotationAxis;
     }
 
-
-
-
-    public static Matrix matCreateProjection4x4(double fNear, double fFar, double fFov, int width, int height) {
-        double q = fFar / (fFar - fNear);
-        double aspectRatio = (double) width / height;
-        double scalingFactorRad = 1 / tan(fFov * 0.5 / 180 * Math.PI);
-
-        Matrix matProj = new Matrix();
-        matProj.getMatrix()[0][0] = aspectRatio * scalingFactorRad;
-        matProj.getMatrix()[1][1] = scalingFactorRad;
-        matProj.getMatrix()[2][2] = q;
-        matProj.getMatrix()[3][2] = - fNear * q;
-        matProj.getMatrix()[2][3] = 1;
-        matProj.getMatrix()[3][3] = 0;
-
-        return matProj;
-    }
 
     public static Matrix matMultiplication(Matrix mat1, Matrix mat2 ) {
         int nbRow = mat1.getMatrix().length;
         int nbCol = mat2.getMatrix()[0].length;
 
-        Matrix matrix = new Matrix(nbRow, nbCol);
+        Matrix matResult = new Matrix(nbRow, nbCol);
         for (int i = 0; i < nbRow; i++) {
             for (int j = 0; j < nbCol; j++) {
-                matrix.getMatrix()[i][j] = mat1.getMatrix()[i][0] * mat2.getMatrix()[0][j] + mat1.getMatrix()[i][1] * mat2.getMatrix()[1][j] + mat1.getMatrix()[i][2] * mat2.getMatrix()[2][j] + mat1.getMatrix()[i][3] * mat2.getMatrix()[3][j];
+                matResult.getMatrix()[i][j] = mat1.getMatrix()[i][0] * mat2.getMatrix()[0][j] + mat1.getMatrix()[i][1] * mat2.getMatrix()[1][j] + mat1.getMatrix()[i][2] * mat2.getMatrix()[2][j] + mat1.getMatrix()[i][3] * mat2.getMatrix()[3][j];
             }
         }
 
-        return matrix;
+        return matResult;
     }
 
     public static Matrix matCreateTranslation4x4(double x, double y, double z) {

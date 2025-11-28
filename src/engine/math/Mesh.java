@@ -1,20 +1,15 @@
+package engine.math;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Mesh {
     private List<Vertex3D> vertices;
     private List<int []> faceIndices;
     private final List<Triangle> tris;
-    private Matrix matProj;
-
-    public void setMatProj(Matrix matProj) {
-        this.matProj = matProj;
-    }
 
     public Mesh() {
         this.tris = new ArrayList<>();
-        this.matProj = null;
         this.vertices = new ArrayList<Vertex3D>();
         this.faceIndices = new ArrayList<>();
 
@@ -36,10 +31,6 @@ public class Mesh {
 
     public List<Triangle> getTris() {
         return tris;
-    }
-
-    public Matrix getMatProj() {
-        return matProj;
     }
 
     public List<Vertex3D> getVertices() {
@@ -64,10 +55,4 @@ public class Mesh {
         }
     }
 
-    @Override
-    public String toString() {
-        return "Mesh{" +
-                "matProj=" + Arrays.toString(matProj.getMatrix()) +
-                '}';
-    }
 }

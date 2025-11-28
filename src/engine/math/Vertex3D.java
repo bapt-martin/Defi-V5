@@ -1,3 +1,5 @@
+package engine.math;
+
 import static java.lang.Math.sqrt;
 
 public class Vertex3D {
@@ -40,6 +42,10 @@ public class Vertex3D {
         this.y = other.y;
         this.z = other.z;
         this.w = other.w;
+    }
+
+    public void convertToVector() {
+        this.w = 0;
     }
 
 
@@ -154,7 +160,7 @@ public class Vertex3D {
 
     @Override
     public String toString() {
-        return "Vertex3D{" +
+        return "engine.math.Vertex3D{" +
                 "x=" + x +
                 ", y=" + y +
                 ", z=" + z +

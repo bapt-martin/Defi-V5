@@ -1,0 +1,187 @@
+package engine.input;
+
+import engine.core.Camera;
+import engine.core.Engine3D;
+import engine.math.Vertex3D;
+
+import java.awt.*;
+import java.awt.event.*;
+
+import static com.sun.java.accessibility.util.AWTEventMonitor.*;
+
+public class InputManager implements KeyListener, MouseListener, MouseMotionListener {
+    private Engine3D engine3D;
+    private Camera camera;
+
+    public InputManager(Engine3D engine3D, Camera camera) {
+        this.engine3D = engine3D;
+        this.camera = camera;
+        addKeyListener(this);
+        addMouseListener(this);
+        addMouseMotionListener(this);
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        handleMouseMoving(e);
+    }
+
+    private void handleMouseMoving(MouseEvent e) {
+        Point winPanelCenter = new Point(engine3D.getWinWidth() /2, engine3D.getWinHeight() /2);
+        Point winMousePos = e.getPoint();
+
+        if(engine3D.isFirstMouseMove()) {
+            // Skip the first delta to avoid initial Jump
+            engine3D.getWinLastMousePosition().setX(winPanelCenter.x);
+            engine3D.getWinLastMousePosition().setY(winPanelCenter.y);
+            engine3D.setFirstMouseMove(false);
+            return;
+        }
+
+        int dx = winMousePos.x - (int) engine3D.getWinLastMousePosition().getX();
+        int dy = winMousePos.y - (int) engine3D.getWinLastMousePosition().getY();
+
+        camera.setdCamPitch(camera.getdCamPitch() + engine3D.getRotationCameraSpeed() * -dy * engine3D.getMouseSensibility());
+        camera.setdCamYaw(camera.getdCamYaw() + engine3D.getRotationCameraSpeed() * dx * engine3D.getMouseSensibility());
+
+        try {
+            centerMouse(engine3D);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        engine3D.getKeysPressed()[e.getKeyCode()] = true;
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        engine3D.getKeysPressed()[e.getKeyCode()] = false;
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    public void handleKeyPress() {
+        // TRANSLATION
+        // Q = Left
+        if (engine3D.getKeysPressed()[KeyEvent.VK_Q]) {
+            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamRight())));
+        }
+
+        // D = Right
+        if (engine3D.getKeysPressed()[KeyEvent.VK_D]) {
+            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamRight())));
+        }
+
+        // SHIFT + SPACE = Down
+        // SPACE = Up
+        if (engine3D.getKeysPressed()[KeyEvent.VK_SHIFT]) {
+            if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
+                camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamUp())));
+            }
+        } else {
+            if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
+                camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamUp())));
+            }
+        }
+
+        // Z = Forward
+        if (engine3D.getKeysPressed()[KeyEvent.VK_Z]) {
+            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamDirection())));
+        }
+        // S = Behind
+        if (engine3D.getKeysPressed()[KeyEvent.VK_S]) {
+            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(engine3D.getTranslationCameraSpeed(), camera.getvCamDirection())));
+        }
+
+        // ROTATION
+        // UP = Trigo X-Axis rotation Pitch
+        if (engine3D.getKeysPressed()[KeyEvent.VK_UP]) {
+            camera.setdCamPitch(camera.getdCamPitch() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+        // DOWN = Horaire X-Axis rotation Pitch
+        if (engine3D.getKeysPressed()[KeyEvent.VK_DOWN]) {
+            camera.setdCamPitch(camera.getdCamPitch() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+        // RIGHT = Trigo Y-Axis rotation Yaw
+        if (engine3D.getKeysPressed()[KeyEvent.VK_RIGHT]) {
+            camera.setdCamYaw(camera.getdCamYaw() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+        // LEFT = Horaire Y-Axis rotation Yaw
+        if (engine3D.getKeysPressed()[KeyEvent.VK_LEFT]) {
+            camera.setdCamYaw(camera.getdCamYaw() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+        // A = Trigo Z-Axis rotation Roll
+        if (engine3D.getKeysPressed()[KeyEvent.VK_A]) {
+            camera.setdCamRoll(camera.getdCamRoll() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+        // E = Horaire Y-Axis rotation Roll
+        if (engine3D.getKeysPressed()[KeyEvent.VK_E]) {
+            camera.setdCamRoll(camera.getdCamRoll() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+        }
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        System.out.println("dragggggged : " + e.getX() + ", " + e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        System.out.println("Clic souris : " + e.getX() + ", " + e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        System.out.println("PRESSEEEED  " +e.getX() +" : "+ e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        System.out.println("REALEASSSSEED  " +e.getX() +" : "+ e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        System.out.println("zrreg" + e.getX() +" : "+ e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        System.out.println(e.getX() +" : "+ e.getY());
+        engine3D.requestFocusInWindow();
+    }
+
+    public void centerMouse(Engine3D engine3D) {
+        try {
+            Robot robot = new Robot();
+            Point winPosition = engine3D.getLocationOnScreen();
+            Point winPanelCenter = new Point(engine3D.getWinWidth() /2, engine3D.getWinHeight() /2);
+
+            int winPanelCenterX = winPosition.x + winPanelCenter.x;
+            int winPanelCenterY = winPosition.y + winPanelCenter.y;
+
+            robot.mouseMove(winPanelCenterX, winPanelCenterY); // Robot move relatively of the whole screen
+            // Update last position
+            engine3D.getWinLastMousePosition().setX(winPanelCenter.x);
+            engine3D.getWinLastMousePosition().setY(winPanelCenter.y);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

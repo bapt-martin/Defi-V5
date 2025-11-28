@@ -1,3 +1,8 @@
+package engine.io;
+
+import engine.math.Mesh;
+import engine.math.Vertex3D;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -26,7 +31,7 @@ public abstract class Document {
 
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty()) continue; // ignore lignes vides
+                if (line.isEmpty()) continue; // Ignore empty lines
 
                 char firstCharacter = line.charAt(0);
 

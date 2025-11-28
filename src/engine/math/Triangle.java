@@ -1,7 +1,7 @@
+package engine.math;
+
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static java.awt.Color.*;
 
@@ -42,10 +42,10 @@ public class Triangle {
         return vertices;
     }
 
-    private static double distPointToPlane(Vertex3D planePoint, Vertex3D planeNorm, Vertex3D point) {
-        planeNorm.vertexNormalisation();
+    private static double distPointToPlane(Vertex3D pPlanePoint, Vertex3D vPlaneNorm, Vertex3D pPoint) {
+        vPlaneNorm.vertexNormalisation();
 
-        return Vertex3D.dotProduct(planeNorm, point) - Vertex3D.dotProduct(planePoint, planeNorm);
+        return Vertex3D.dotProduct(vPlaneNorm, pPoint) - Vertex3D.dotProduct(pPlanePoint, vPlaneNorm);
     }
 
     public static int trisClippingPlane (Vertex3D planePoint, Vertex3D planeNorm, Triangle triIn, Triangle triOut1, Triangle triOut2) {
@@ -117,7 +117,7 @@ public class Triangle {
 
     @Override
     public String toString() {
-        return "Triangle{" +
+        return "engine.math.Triangle{" +
                 "vertices=" + Arrays.toString(vertices) +
                 '}';
     }

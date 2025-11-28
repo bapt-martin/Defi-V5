@@ -1,3 +1,5 @@
+package engine.core;
+
 import java.awt.*;
 
 public class MouseCircleDemo {

@@ -6,74 +6,81 @@ import engine.math.Matrix;
 import engine.math.Mesh;
 import engine.math.Triangle;
 import engine.math.Vertex3D;
+import engine.overlay.GeneralData;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Engine3D extends JPanel implements KeyListener, MouseListener, MouseMotionListener {
+public class Engine3D extends JPanel {
     private Mesh mesh;
     private Camera camera;
     private InputManager inputManager;
 
-    private int winWidth;
-    private int winHeight;
+    private int iWinWidth;
+    private int iWinHeight;
 
-    private double theta;
+    private double dtheta;
 
     private final boolean[] keysPressed = new boolean[256];
     private final double translationCameraSpeed = 0.1;
     private final double rotationCameraSpeed = 0.5;
 
-    private Vertex3D winLastMousePosition;
+    private Vertex3D pWinLastMousePosition;
     private final double mouseSensibility = 0.01;
     private boolean firstMouseMove = true;
 
     private final Timer timeLoop;
     private long startFrameTime = System.nanoTime();
     private long lastFrameTime = System.nanoTime();
+    private long lastFPSTime = System.nanoTime();
     private double deltaTime = 0;
     private double elapsedTime;
+    private int nbFrames;
+
 
     private int nbTriRender = 0;
 
+    private GeneralData generalData;
 
-    public Engine3D(int widthInit, int heightInit) {
-        this.winWidth = widthInit;
-        this.winHeight = heightInit;
+
+    public Engine3D(int iWidthInit, int iHeightInit) {
+        this.iWinWidth = iWidthInit;
+        this.iWinHeight = iHeightInit;
 
         this.camera = new Camera(0.1,1000,90);
 
-        this.theta = 0;
+        this.dtheta = 0;
 
         this.mesh = new Mesh();
         setBackground(Color.BLACK);
-
-
 
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
         requestFocusInWindow();
 
         this.inputManager = new InputManager(this,this.camera);
+        addKeyListener(inputManager);
+        addMouseListener(inputManager);
+        addMouseMotionListener(inputManager);
 
-        addKeyListener(this);
-        addMouseListener(this);
-        addMouseMotionListener(this);
-
-        this.winLastMousePosition = new Vertex3D(0,0,0);
+        this.pWinLastMousePosition = new Vertex3D(0,0,0);
 
         // .OBJ file reading + construction of the 3D triangle to render
-        Document.readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\obj model\\axis.obj"),this.mesh);
+        Document.readObjFile(Paths.get("obj model\\axis.obj"),this.mesh);
         this.mesh.triConstruct();
 
         // Projection matrix coefficient definition initialisation
-        this.camera.matCreateCamProjection(winWidth, winHeight);
+        this.camera.matCreateCamProjection(iWinWidth, iWinHeight);
 
         this.timeLoop = new Timer(16, e -> repaint());
+        this.generalData = new GeneralData();
+        this.setLayout(null); // on utilise null pour positionner manuellement
+        generalData.setBounds(10, 10, 80, 20); // x, y, largeur, hauteur
+        this.add(generalData);
+        this.repaint();
     }
 
     @Override
@@ -81,99 +88,13 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         super.addNotify();
 
         SwingUtilities.invokeLater(() -> {
-            centerMouse();
+            inputManager.centerMouse(this);
             timeLoop.start();
             requestFocusInWindow();
         });
     }
 
-    public void centerMouse() {
-        try {
-            Robot robot = new Robot();
-            Point winPosition = this.getLocationOnScreen();
-            Point winPanelCenter = new Point(winWidth /2, winHeight /2);
-
-            int winPanelCenterX = winPosition.x + winPanelCenter.x;
-            int winPanelCenterY = winPosition.y + winPanelCenter.y;
-
-            robot.mouseMove(winPanelCenterX, winPanelCenterY); // Robot move relatively of the whole screen
-            // Update last position
-            winLastMousePosition.setX(winPanelCenter.x);
-            winLastMousePosition.setY(winPanelCenter.y);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        handleMouseMoving(e);
-    }
-
-    private void handleMouseMoving(MouseEvent e) {
-        Point winPanelCenter = new Point(winWidth /2, winHeight /2);
-        Point winMousePos = e.getPoint();
-
-        if(firstMouseMove) {
-            // Skip the first delta to avoid initial Jump
-            winLastMousePosition.setX(winPanelCenter.x);
-            winLastMousePosition.setY(winPanelCenter.y);
-            firstMouseMove = false;
-            return;
-        }
-
-        int dx = winMousePos.x - (int) winLastMousePosition.getX();
-        int dy = winMousePos.y - (int) winLastMousePosition.getY();
-
-        camera.setdCamPitch(camera.getdCamPitch() + rotationCameraSpeed * -dy * mouseSensibility);
-        camera.setdCamYaw(camera.getdCamYaw() + rotationCameraSpeed * dx * mouseSensibility);
-
-
-
-        try {
-            centerMouse();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        System.out.println("dragggggged : " + e.getX() + ", " + e.getY());
-        requestFocusInWindow();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        System.out.println("Clic souris : " + e.getX() + ", " + e.getY());
-        requestFocusInWindow();
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        System.out.println("PRESSEEEED  " +e.getX() +" : "+ e.getY());
-        requestFocusInWindow();
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        System.out.println("REALEASSSSEED  " +e.getX() +" : "+ e.getY());
-        requestFocusInWindow();
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        System.out.println("zrreg" + e.getX() +" : "+ e.getY());
-        requestFocusInWindow();
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        System.out.println(e.getX() +" : "+ e.getY());
-        requestFocusInWindow();
-    }
-
-//START OF THE PIPELINE
+    //START OF THE PIPELINE
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -188,47 +109,46 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 //        System.out.println(deltaTime);
 
         // Actualisation of theta
-//        this.theta += 0.05;
+//        this.dTheta += 0.05;
 //        System.out.println(this.theta);
 
-        // ROTATION OF THE OBJECT IN THE WORLD (adding a rotation mat per object in the futur)
+        // ROTATION OF THE OBJECT IN THE WORLD (adding a rotation mat per object in the future)
         // Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.theta);
+        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.dtheta);
 
         // Rotation matrices Y-axis
-        Matrix matRotY = Matrix.matCreateRotationY4x4(this.theta * 0.5);
+        Matrix matRotY = Matrix.matCreateRotationY4x4(this.dtheta * 0.5);
 
         // Rotation matrices X-axis
-        Matrix matRotX = Matrix.matCreateRotationX4x4(this.theta * 1.5);
+        Matrix matRotX = Matrix.matCreateRotationX4x4(this.dtheta * 1.5);
 
         // TOTAL ROTATION
-        Matrix matRotationTot = Matrix.matMultiplication(matRotZ, Matrix.matMultiplication(matRotX,matRotY));
+        Matrix matRotationTot = Matrix.matMultiplication4x4(matRotZ, Matrix.matMultiplication4x4(matRotX,matRotY));
 
         // Z-Axis Offset
         Matrix matTranslation = Matrix.matCreateTranslation4x4(0,0,16);
 
         // COMBINATION ROTATION + TRANSLATION
-        Matrix matWorld = Matrix.matMultiplication(matRotationTot,matTranslation);
+        Matrix matWorld = Matrix.matMultiplication4x4(matRotationTot,matTranslation);
 
         inputManager.handleKeyPress();
         camera.camUpdate();
+        generalData.CalcFpsPerFrame(this);
 
 //        System.out.println("target "+vertTarget.toString() +" : " + vertTargetYPR.toString());
 //        System.out.println("right  "+vertRight.toString()  +" : " + vertRightYPR.toString());
 //        System.out.println("up     "+vertUp.toString()     +" : " + vertUpYPR.toString());
 
         // Creation of the camera matrix
-        Matrix matCameraWorld = Matrix.matCreateCamReferentiel(camera.getpCamPosition(), camera.getvCamDirection(), camera.getvCamUp());
-
+        Matrix matCameraWorld = Matrix.matCreateCamReferential(camera.getpCamPosition(), camera.getvCamDirection(), camera.getvCamUp());
 
         // View matrix for the camera
         Matrix matWorldCamera = Matrix.matQuickInverse(matCameraWorld);
 
         // engine.math.Triangle projection and drawing
-        List<Triangle> trisToRaster = new ArrayList<Triangle>();
+        List<Triangle> trisToRaster = new ArrayList<>();
         for (Triangle triangleToProject : mesh.getTris()) {
             Triangle triTransformed = new Triangle();
-//            engine.math.Triangle triProjected = new engine.math.Triangle();
             Triangle triViewed = new Triangle();
 
             // Z-axis, Y-axis and X-axis Rotation
@@ -245,7 +165,7 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 
 
             Vertex3D vNormal = Vertex3D.crossProduct(vLine1,vLine2);
-            vNormal.vertexNormalisation();
+            vNormal.vertNormalisation();
 
             // Casting the ray of the camera
             Vertex3D vCameraRay = Vertex3D.vertexSubtraction(triTransformed.getVertices()[0], camera.getpCamPosition());
@@ -255,7 +175,7 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
             if (Vertex3D.dotProduct(vNormal, vCameraRay)< 0) {
 
                 Vertex3D vLightDirection = new Vertex3D(0,0,-1,0); // Pseudo definition of the light source
-                vLightDirection.vertexNormalisation();
+                vLightDirection.vertNormalisation();
 
                 double dpLightNorm = Vertex3D.dotProduct(vNormal,vLightDirection);
                 Color colorTri = Triangle.grayScale(dpLightNorm);
@@ -283,7 +203,7 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
                          triProjected.getVertices()[ind] = Vertex3D.vertexMatrixMultiplication(trisClipped[n].getVertices()[ind], this.camera.getMatProjection());
 
                          // Normalization of the vertex
-                         triProjected.getVertices()[ind] = Vertex3D.vertexDivision(triProjected.getVertices()[ind].getW(),triProjected.getVertices()[ind]);
+                         triProjected.getVertices()[ind] = Vertex3D.vertDivisionScalar(triProjected.getVertices()[ind].getW(),triProjected.getVertices()[ind]);
 
 //                         // X/Y Inverted so need to put them back???
                          triProjected.getVertices()[ind].setX(triProjected.getVertices()[ind].getX() * -1);
@@ -294,8 +214,8 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
                          triProjected.getVertices()[ind] = Vertex3D.vertexAddition(triProjected.getVertices()[ind], vOffsetView);
 
                          // Scaling to screen dimension
-                         triProjected.getVertices()[ind].setX(triProjected.getVertices()[ind].getX() * 0.5 * winHeight);
-                         triProjected.getVertices()[ind].setY(triProjected.getVertices()[ind].getY() * 0.5 * winWidth);
+                         triProjected.getVertices()[ind].setX(triProjected.getVertices()[ind].getX() * 0.5 * iWinHeight);
+                         triProjected.getVertices()[ind].setY(triProjected.getVertices()[ind].getY() * 0.5 * iWinWidth);
 
                          // Color transfer
                          triProjected.setColor(trisClipped[n].getColor());
@@ -331,13 +251,13 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
                             nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, 0, 0), new Vertex3D(0, 1, 0), test, clipped[0], clipped[1]);
                             break;
                         case 1:
-                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, winHeight - 1, 0), new Vertex3D(0, -1, 0), test, clipped[0], clipped[1]);
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, iWinHeight - 1, 0), new Vertex3D(0, -1, 0), test, clipped[0], clipped[1]);
                             break;
                         case 2:
                             nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(0, 0, 0), new Vertex3D(1, 0, 0), test, clipped[0], clipped[1]);
                             break;
                         case 3:
-                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(winWidth - 1, 0, 0), new Vertex3D(-1, 0, 0), test, clipped[0], clipped[1]);
+                            nbTrisToAdd = Triangle.trisClippingPlane(new Vertex3D(iWinWidth - 1, 0, 0), new Vertex3D(-1, 0, 0), test, clipped[0], clipped[1]);
                             break;
                     }
 
@@ -374,85 +294,6 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
 
     }
 
-    @Override
-    public void keyPressed(KeyEvent e) {
-        keysPressed[e.getKeyCode()] = true;
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        keysPressed[e.getKeyCode()] = false;
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    private void handleKeyPress() {
-        // TRANSLATION
-        // Q = Left
-        if (keysPressed[KeyEvent.VK_Q]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamRight())));
-        }
-
-        // D = Right
-        if (keysPressed[KeyEvent.VK_D]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamRight())));
-        }
-
-        // SHIFT + SPACE = Down
-        // SPACE = Up
-        if (keysPressed[KeyEvent.VK_SHIFT]) {
-            if (keysPressed[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamUp())));
-            }
-        } else {
-            if (keysPressed[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamUp())));
-            }
-        }
-
-        // Z = Forward
-        if (keysPressed[KeyEvent.VK_Z]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamDirection())));
-        }
-        // S = Behind
-        if (keysPressed[KeyEvent.VK_S]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.vertexMultiplication(translationCameraSpeed, camera.getvCamDirection())));
-        }
-
-        // ROTATION
-        // UP = Trigo X-Axis rotation Pitch
-        if (keysPressed[KeyEvent.VK_UP]) {
-            camera.setdCamPitch(camera.getdCamPitch() + rotationCameraSpeed * deltaTime);
-        }
-
-        // DOWN = Horaire X-Axis rotation Pitch
-        if (keysPressed[KeyEvent.VK_DOWN]) {
-            camera.setdCamPitch(camera.getdCamPitch() - rotationCameraSpeed * deltaTime);
-        }
-
-        // RIGHT = Trigo Y-Axis rotation Yaw
-        if (keysPressed[KeyEvent.VK_RIGHT]) {
-            camera.setdCamYaw(camera.getdCamYaw() + rotationCameraSpeed * deltaTime);
-        }
-
-        // LEFT = Horaire Y-Axis rotation Yaw
-        if (keysPressed[KeyEvent.VK_LEFT]) {
-            camera.setdCamYaw(camera.getdCamYaw() - rotationCameraSpeed * deltaTime);
-        }
-
-        // A = Trigo Z-Axis rotation Roll
-        if (keysPressed[KeyEvent.VK_A]) {
-            camera.setdCamRoll(camera.getdCamRoll() + rotationCameraSpeed * deltaTime);
-        }
-
-        // E = Horaire Y-Axis rotation Roll
-        if (keysPressed[KeyEvent.VK_E]) {
-            camera.setdCamRoll(camera.getdCamRoll() - rotationCameraSpeed * deltaTime);
-        }
-
-    }
 
     public static void main(String[] args) {
         JFrame window = new JFrame("3D Engine");
@@ -480,24 +321,24 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         this.mesh = mesh;
     }
 
-    public int getWinWidth() {
-        return winWidth;
+    public int getiWinWidth() {
+        return iWinWidth;
     }
 
-    public int getWinHeight() {
-        return winHeight;
+    public int getiWinHeight() {
+        return iWinHeight;
     }
 
-    public void setWinWidth(int winWidth) {
-        this.winWidth = winWidth;
+    public void setiWinWidth(int iWinWidth) {
+        this.iWinWidth = iWinWidth;
     }
 
-    public void setWinHeight(int winHeight) {
-        this.winHeight = winHeight;
+    public void setiWinHeight(int iWinHeight) {
+        this.iWinHeight = iWinHeight;
     }
 
-    public double getTheta() {
-        return theta;
+    public double getDtheta() {
+        return dtheta;
     }
 
     public boolean[] getKeysPressed() {
@@ -512,8 +353,8 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         return rotationCameraSpeed;
     }
 
-    public Vertex3D getWinLastMousePosition() {
-        return winLastMousePosition;
+    public Vertex3D getpWinLastMousePosition() {
+        return pWinLastMousePosition;
     }
 
     public double getMouseSensibility() {
@@ -548,7 +389,21 @@ public class Engine3D extends JPanel implements KeyListener, MouseListener, Mous
         return camera;
     }
 
+    public int getNbFrames() {
+        return nbFrames;
+    }
 
+    public void setNbFrames(int nbFrames) {
+        this.nbFrames = nbFrames;
+    }
+
+    public long getLastFPSTime() {
+        return lastFPSTime;
+    }
+
+    public void setLastFPSTime(long lastFPSTime) {
+        this.lastFPSTime = lastFPSTime;
+    }
 }
 
 

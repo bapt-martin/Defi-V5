@@ -14,7 +14,7 @@ public class Quaternion {
     }
 
     public Quaternion(double angle, Vertex3D axis) {
-        axis.vertexNormalisation();
+        axis.vertNormalisation();
         double halfAngle = angle / 2;
         double s = Math.sin(halfAngle);
 

@@ -43,24 +43,25 @@ public class Triangle {
     }
 
     private static double distPointToPlane(Vertex3D pPlanePoint, Vertex3D vPlaneNorm, Vertex3D pPoint) {
-        vPlaneNorm.vertexNormalisation();
+        vPlaneNorm.vertNormalisation();
 
         return Vertex3D.dotProduct(vPlaneNorm, pPoint) - Vertex3D.dotProduct(pPlanePoint, vPlaneNorm);
     }
 
     public static int trisClippingPlane (Vertex3D planePoint, Vertex3D planeNorm, Triangle triIn, Triangle triOut1, Triangle triOut2) {
-        planeNorm.vertexNormalisation();
+        planeNorm.vertNormalisation();
+        planeNorm.convertToVector();
 
-        Vertex3D[] pointsInside  = new Vertex3D[3]; int nbPointsInside = 0;
-        Vertex3D[] pointsOutside = new Vertex3D[3]; int nbPointsOutside = 0;
+        Vertex3D[] ptsInside  = new Vertex3D[3]; int nbPointsInside = 0;
+        Vertex3D[] ptsOutside = new Vertex3D[3]; int nbPointsOutside = 0;
 
         // Classification of the point
         for (int i = 0; i < 3; i++) {
-            double distPoint = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[i]);
-            if (distPoint >= 0) {
-                pointsInside[nbPointsInside++] = triIn.getVertices()[i];
+            double dDistPoint = distPointToPlane(planePoint, planeNorm, triIn.getVertices()[i]);
+            if (dDistPoint >= 0) {
+                ptsInside[nbPointsInside++] = triIn.getVertices()[i];
             } else {
-                pointsOutside[nbPointsOutside++] = triIn.getVertices()[i];
+                ptsOutside[nbPointsOutside++] = triIn.getVertices()[i];
             }
         }
 
@@ -74,9 +75,9 @@ public class Triangle {
             triOut1.setColor(triIn.getColor());
 //            triOut1.setColor(Color.RED);
 
-            triOut1.getVertices()[0] = pointsInside[0];
-            triOut1.getVertices()[1] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[0],pointsOutside[0]);
-            triOut1.getVertices()[2] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[0],pointsOutside[1]);
+            triOut1.getVertices()[0] = ptsInside[0];
+            triOut1.getVertices()[1] = Vertex3D.pIntersectPlanePoint(planePoint, planeNorm, ptsInside[0],ptsOutside[0]);
+            triOut1.getVertices()[2] = Vertex3D.pIntersectPlanePoint(planePoint, planeNorm, ptsInside[0],ptsOutside[1]);
             return 1;
         }
         if (nbPointsInside == 2) {
@@ -85,13 +86,13 @@ public class Triangle {
 //            triOut1.setColor(Color.GREEN);
 //            triOut2.setColor(Color.BLUE);
 
-            triOut1.getVertices()[0] = pointsInside[0];
-            triOut1.getVertices()[1] = pointsInside[1];
-            triOut1.getVertices()[2] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[0],pointsOutside[0]);
+            triOut1.getVertices()[0] = ptsInside[0];
+            triOut1.getVertices()[1] = ptsInside[1];
+            triOut1.getVertices()[2] = Vertex3D.pIntersectPlanePoint(planePoint, planeNorm, ptsInside[0],ptsOutside[0]);
 
-            triOut2.getVertices()[0] = pointsInside[1];
-            triOut2.getVertices()[1] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[0],pointsOutside[0]);; // dans mon livre faut inverser les 2
-            triOut2.getVertices()[2] = Vertex3D.vert_IntersectPlane(planePoint, planeNorm, pointsInside[1],pointsOutside[0]);
+            triOut2.getVertices()[0] = ptsInside[1];
+            triOut2.getVertices()[1] = Vertex3D.pIntersectPlanePoint(planePoint, planeNorm, ptsInside[0],ptsOutside[0]);; // dans mon livre faut inverser les 2
+            triOut2.getVertices()[2] = Vertex3D.pIntersectPlanePoint(planePoint, planeNorm, ptsInside[1],ptsOutside[0]);
             return 2;
         }
         else {

@@ -23,7 +23,7 @@ public class Camera {
     private double dFov;
 
     public Camera() {
-        this.pCamPosition = new Vertex3D(0, 0, 1,0);
+        this.pCamPosition = new Vertex3D(0, 0, 1);
         this.vCamDirection = new Vertex3D(0, 0, 1,0);
         this.vCamUp = new Vertex3D(0, 1, 0,0);
         this.vCamRight = new Vertex3D(1, 0, 0,0);
@@ -81,11 +81,11 @@ public class Camera {
     }
 
     public void matProjectionActualisation(Graphics g, Engine3D engine3D) {
-        if (engine3D.getWidth() != engine3D.getWinWidth() || engine3D.getHeight() != engine3D.getWinHeight()) {
-            engine3D.setWinWidth(engine3D.getWidth());
-            engine3D.setWinHeight(engine3D.getHeight());
+        if (engine3D.getWidth() != engine3D.getiWinWidth() || engine3D.getHeight() != engine3D.getiWinHeight()) {
+            engine3D.setiWinWidth(engine3D.getWidth());
+            engine3D.setiWinHeight(engine3D.getHeight());
 
-            engine3D.getCamera().matCreateCamProjection(engine3D.getWinWidth(), engine3D.getWinHeight());
+            engine3D.getCamera().matCreateCamProjection(engine3D.getiWinWidth(), engine3D.getiWinHeight());
         }
     }
 
@@ -102,9 +102,9 @@ public class Camera {
         Vertex3D vRightY  = Vertex3D.vertexMatrixMultiplication(vRight,matCameraRotYaw);
         Vertex3D vUpY     = Vertex3D.vertexMatrixMultiplication(vUp,matCameraRotYaw);
 
-        vTargetY.vertexNormalisation();
-        vRightY.vertexNormalisation();
-        vUpY.vertexNormalisation();
+        vTargetY.vertNormalisation();
+        vRightY.vertNormalisation();
+        vUpY.vertNormalisation();
 
         // Rotation around local X-axis
         dCamPitch = Math.max(-89.0*Math.PI/180.0, Math.min(89.0*Math.PI/180.0, dCamPitch));
@@ -114,9 +114,9 @@ public class Camera {
         Vertex3D vRightYP  = Vertex3D.vertexMatrixMultiplication(vRightY,matCameraRotPitch);
         Vertex3D vUpYP     = Vertex3D.vertexMatrixMultiplication(vUpY,matCameraRotPitch);
 
-        vTargetYP.vertexNormalisation();
-        vRightYP.vertexNormalisation();
-        vUpYP.vertexNormalisation();
+        vTargetYP.vertNormalisation();
+        vRightYP.vertNormalisation();
+        vUpYP.vertNormalisation();
 
         // Rotation around local Z-axis
         Matrix matCameraRotRoll  = Matrix.matCreateRotationAroundAxis4x4(dCamRoll,vTargetYP);
@@ -125,9 +125,9 @@ public class Camera {
         Vertex3D vRightYPR  = Vertex3D.vertexMatrixMultiplication(vRightYP,matCameraRotRoll);
         Vertex3D vUpYPR     = Vertex3D.vertexMatrixMultiplication(vUpYP,matCameraRotRoll);
 
-        vTargetYPR.vertexNormalisation();
-        vRightYPR.vertexNormalisation();
-        vUpYPR.vertexNormalisation();
+        vTargetYPR.vertNormalisation();
+        vRightYPR.vertNormalisation();
+        vUpYPR.vertNormalisation();
 
         vCamDirection = vTargetYPR;
         vCamUp = vUpYPR;

@@ -18,33 +18,30 @@ public class Engine3D extends JPanel {
     private Mesh mesh;
     private Camera camera;
     private InputManager inputManager;
+    private GeneralData generalData;
 
     private int iWinWidth;
     private int iWinHeight;
 
     private double dtheta;
 
-    private final boolean[] keysPressed = new boolean[256];
-    private final double translationCameraSpeed = 0.1;
-    private final double rotationCameraSpeed = 0.5;
+    private final boolean[] keysPressed = new boolean[256]; //move to imput manager
+    private final double dTranslationCameraSpeed = 0.1;//Move to camera
+    private final double dRotationCameraSpeed = 0.5;//Move to camera
 
-    private Vertex3D pWinLastMousePosition;
-    private final double mouseSensibility = 0.01;
-    private boolean firstMouseMove = true;
+    private Vertex3D pWinLastMousePosition;// To input manager?
+    private final double mouseSensibility = 0.01;// To input manager?
+    private boolean firstMouseMove = true;// To input manager?
 
-    private final Timer timeLoop;
-    private long startFrameTime = System.nanoTime();
-    private long lastFrameTime = System.nanoTime();
-    private long lastFPSTime = System.nanoTime();
-    private double deltaTime = 0;
-    private double elapsedTime;
-    private int nbFrames;
-
+    private final Timer timeLoop; //generale data?
+    private long startFrameTime = System.nanoTime(); //generale data?
+    private long lastFrameTime = System.nanoTime(); //generale data?
+    private long lastFPSTime = System.nanoTime(); //generale data?
+    private double deltaTime = 0; //generale data?
+    private double elapsedTime; //generale data?
+    private int nbFrames; //generale data?
 
     private int nbTriRender = 0;
-
-    private GeneralData generalData;
-
 
     public Engine3D(int iWidthInit, int iHeightInit) {
         this.iWinWidth = iWidthInit;
@@ -54,8 +51,7 @@ public class Engine3D extends JPanel {
 
         this.dtheta = 0;
 
-        this.mesh = new Mesh();
-        setBackground(Color.BLACK);
+        setBackground(new Color(150,150,200));
 
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
@@ -66,11 +62,11 @@ public class Engine3D extends JPanel {
         addMouseListener(inputManager);
         addMouseMotionListener(inputManager);
 
-        this.pWinLastMousePosition = new Vertex3D(0,0,0);
+        this.pWinLastMousePosition = Vertex3D.createPoint(0,0,0);
 
         // .OBJ file reading + construction of the 3D triangle to render
-        Document.readObjFile(Paths.get("obj model\\axis.obj"),this.mesh);
-        this.mesh.triConstruct();
+        this.mesh = Document.readObjFile(Paths.get("obj model\\axis.obj"));
+
 
         // Projection matrix coefficient definition initialisation
         this.camera.matCreateCamProjection(iWinWidth, iWinHeight);
@@ -100,7 +96,7 @@ public class Engine3D extends JPanel {
         super.paintComponent(g);
 
         // Real time aspect actualisation
-        camera.matProjectionActualisation(g, this);
+        camera.matProjectionActualisation(this);
 
         long now = System.nanoTime();
         elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
@@ -147,7 +143,7 @@ public class Engine3D extends JPanel {
 
         // engine.math.Triangle projection and drawing
         List<Triangle> trisToRaster = new ArrayList<>();
-        for (Triangle triangleToProject : mesh.getTris()) {
+        for (Triangle triangleToProject : mesh.getMeshTriangle()) {
             Triangle triTransformed = new Triangle();
             Triangle triViewed = new Triangle();
 
@@ -262,8 +258,7 @@ public class Engine3D extends JPanel {
                     }
 
                     for (int w = 0; w < nbTrisToAdd; w++) {
-                        Triangle temp = new Triangle();
-                        temp.CopyTriangle(clipped[w]);
+                        Triangle temp = new Triangle(clipped[w]);
                         futurTestToClip.add(temp);
                     }
                 }
@@ -345,12 +340,12 @@ public class Engine3D extends JPanel {
         return keysPressed;
     }
 
-    public double getTranslationCameraSpeed() {
-        return translationCameraSpeed;
+    public double getdTranslationCameraSpeed() {
+        return dTranslationCameraSpeed;
     }
 
-    public double getRotationCameraSpeed() {
-        return rotationCameraSpeed;
+    public double getdRotationCameraSpeed() {
+        return dRotationCameraSpeed;
     }
 
     public Vertex3D getpWinLastMousePosition() {

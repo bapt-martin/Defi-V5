@@ -3,8 +3,6 @@ package engine.core;
 import engine.math.Matrix;
 import engine.math.Vertex3D;
 
-import java.awt.*;
-
 import static java.lang.Math.tan;
 
 public class Camera {
@@ -23,27 +21,20 @@ public class Camera {
     private double dFov;
 
     public Camera() {
-        this.pCamPosition = new Vertex3D(0, 0, 1);
-        this.vCamDirection = new Vertex3D(0, 0, 1,0);
-        this.vCamUp = new Vertex3D(0, 1, 0,0);
-        this.vCamRight = new Vertex3D(1, 0, 0,0);
+        this.pCamPosition = Vertex3D.createPoint(0, 0, 1);
+        this.vCamDirection = Vertex3D.createVector(0, 0, 1);
+        this.vCamUp        = Vertex3D.createVector(0, 1, 0);
+        this.vCamRight     = Vertex3D.createVector(1, 0, 0);
         this.dCamPitch = 0;
         this.dCamYaw = 0;
         this.dCamRoll = 0;
         this.dNear = 0.1;
         this.dFar = 1000;
         this.dFov = 90;
-
     }
 
     public Camera(double dNear, double dFar, double dFov) {
-        this.pCamPosition = new Vertex3D(0, 0, 1,0);
-        this.vCamDirection = new Vertex3D(0, 0, 1,0);
-        this.vCamUp = new Vertex3D(0, 1, 0,0);
-        this.vCamRight = new Vertex3D(1, 0, 0,0);
-        this.dCamPitch = 0;
-        this.dCamYaw = 0;
-        this.dCamRoll = 0;
+        this();
         this.dNear = dNear;
         this.dFar = dFar;
         this.dFov = dFov;
@@ -51,36 +42,37 @@ public class Camera {
     }
 
     public Camera(Vertex3D pCamPosition, Vertex3D vCamDirection, Vertex3D vCamUp, Vertex3D vCamRight, double dCamPitch, double dCamYaw, double dCamRoll, Matrix matProjection, double dNear, double dFar, double dFov) {
-        this.pCamPosition = pCamPosition;
-        this.vCamDirection = vCamDirection;
-        this.vCamUp = vCamUp;
-        this.vCamRight = vCamRight;
+        this.pCamPosition  = new Vertex3D(pCamPosition);
+        this.vCamDirection = new Vertex3D(vCamDirection);
+        this.vCamUp        = new Vertex3D(vCamUp);
+        this.vCamRight     = new Vertex3D(vCamRight);
         this.dCamPitch = dCamPitch;
-        this.dCamYaw = dCamYaw;
-        this.dCamRoll = dCamRoll;
-        this.matProjection = matProjection;
+        this.dCamYaw   = dCamYaw;
+        this.dCamRoll  = dCamRoll;
+        this.matProjection = new Matrix(matProjection);
         this.dNear = dNear;
-        this.dFar = dFar;
-        this.dFov = dFov;
+        this.dFar  = dFar;
+        this.dFov  = dFov;
     }
 
     public void matCreateCamProjection(int width, int height) {
-        double q = this.dFar / (dFar - dNear);
+        double q = dFar / (dFar - dNear);
         double aspectRatio = (double) width / height;
         double scalingFactorRad = 1 / tan(dFov * 0.5 / 180 * Math.PI);
 
-        Matrix matProj = new Matrix();
-        matProj.getMatrix()[0][0] = aspectRatio * scalingFactorRad;
-        matProj.getMatrix()[1][1] = scalingFactorRad;
-        matProj.getMatrix()[2][2] = q;
-        matProj.getMatrix()[3][2] = - dNear * q;
-        matProj.getMatrix()[2][3] = 1;
-        matProj.getMatrix()[3][3] = 0;
+        double[][] matProj = new double[4][4];
+        matProj[0][0] = aspectRatio * scalingFactorRad;
+        matProj[1][1] = scalingFactorRad;
+        matProj[2][2] = q;
+        matProj[3][3] = 0;
 
-        this.setMatProjection(matProj);
+        matProj[3][2] = - dNear * q;
+        matProj[2][3] = 1;
+
+        this.setMatProjection(new Matrix(matProj));
     }
 
-    public void matProjectionActualisation(Graphics g, Engine3D engine3D) {
+    public void matProjectionActualisation(Engine3D engine3D) {
         if (engine3D.getWidth() != engine3D.getiWinWidth() || engine3D.getHeight() != engine3D.getiWinHeight()) {
             engine3D.setiWinWidth(engine3D.getWidth());
             engine3D.setiWinHeight(engine3D.getHeight());
@@ -90,7 +82,6 @@ public class Camera {
     }
 
     public void camUpdate() {
-
         Vertex3D vTarget = new Vertex3D(0,0,1,0);
         Vertex3D vUp     = new Vertex3D(0,1,0,0);
         Vertex3D vRight  = new Vertex3D(1,0,0,0);
@@ -108,6 +99,7 @@ public class Camera {
 
         // Rotation around local X-axis
         dCamPitch = Math.max(-89.0*Math.PI/180.0, Math.min(89.0*Math.PI/180.0, dCamPitch));
+
         Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(dCamPitch,vRightY);
 
         Vertex3D vTargetYP = Vertex3D.vertexMatrixMultiplication(vTargetY,matCameraRotPitch);
@@ -129,34 +121,9 @@ public class Camera {
         vRightYPR.vertNormalisation();
         vUpYPR.vertNormalisation();
 
-        vCamDirection = vTargetYPR;
-        vCamUp = vUpYPR;
-        vCamRight = vRightYPR;
-    }
-
-
-    public double getdNear() {
-        return dNear;
-    }
-
-    public void setdNear(double dNear) {
-        this.dNear = dNear;
-    }
-
-    public double getdFar() {
-        return dFar;
-    }
-
-    public void setdFar(double dFar) {
-        this.dFar = dFar;
-    }
-
-    public double getdFov() {
-        return dFov;
-    }
-
-    public void setdFov(double dFov) {
-        this.dFov = dFov;
+        vCamDirection = new Vertex3D(vTargetYPR);
+        vCamUp        = new Vertex3D(vUpYPR);
+        vCamRight     = new Vertex3D(vRightYPR);
     }
 
     public Vertex3D getpCamPosition() {
@@ -164,7 +131,7 @@ public class Camera {
     }
 
     public void setpCamPosition(Vertex3D pCamPosition) {
-        this.pCamPosition = pCamPosition;
+        this.pCamPosition = new Vertex3D(pCamPosition);
     }
 
     public Vertex3D getvCamDirection() {
@@ -172,7 +139,7 @@ public class Camera {
     }
 
     public void setvCamDirection(Vertex3D vCamDirection) {
-        this.vCamDirection = vCamDirection;
+        this.vCamDirection = new Vertex3D(vCamDirection);
     }
 
     public Vertex3D getvCamUp() {
@@ -180,7 +147,7 @@ public class Camera {
     }
 
     public void setvCamUp(Vertex3D vCamUp) {
-        this.vCamUp = vCamUp;
+        this.vCamUp = new Vertex3D(vCamUp);
     }
 
     public Vertex3D getvCamRight() {
@@ -188,7 +155,7 @@ public class Camera {
     }
 
     public void setvCamRight(Vertex3D vCamRight) {
-        this.vCamRight = vCamRight;
+        this.vCamRight = new Vertex3D(vCamRight);
     }
 
     public double getdCamPitch() {
@@ -216,11 +183,11 @@ public class Camera {
     }
 
     public Matrix getMatProjection() {
-        return matProjection;
+        return new Matrix(matProjection);
     }
 
     public void setMatProjection(Matrix matProjection) {
-        this.matProjection = matProjection;
+        this.matProjection = new Matrix(matProjection);
     }
 }
 

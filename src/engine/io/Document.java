@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -17,17 +19,18 @@ public abstract class Document {
 
     public static boolean isFileOpen(Path path) {
         try (var channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
-            // Si l'ouverture exclusive réussit, le fichier n'est pas ouvert ailleurs
             return false;
         } catch (IOException e) {
-            // IOException = probablement déjà ouvert ailleurs
             return true;
         }
     }
 
-    public static void readObjFile(Path path, Mesh mesh) {
+    public static Mesh readObjFile(Path path) {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             String line;
+
+            List<Vertex3D> vertices = new ArrayList<>();
+            List<int[]> indicesFaces = new ArrayList<>();
 
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -45,30 +48,32 @@ public abstract class Document {
                         float y = scan.nextFloat();
                         float z = scan.nextFloat();
 
-                        mesh.getVertices().add(new Vertex3D(x, y, z));
+                        vertices.add(new Vertex3D(x, y, z));
                     }
                     case 'f' -> {
                         int i1 = scan.nextInt()-1;
                         int i2 = scan.nextInt()-1;
                         int i3 = scan.nextInt()-1;
 
-                        mesh.getFaceIndices().add(new int[]{i1,i2,i3});
+                        indicesFaces.add(new int[]{i1,i2,i3});
                     }
                     default -> {
                         // nothing ignore other lines
                     }
                 }
             }
+            Mesh mesh = new Mesh(indicesFaces, vertices);
+            mesh.triConstruct();
 
+            return mesh;
         } catch (IOException e) {
             e.printStackTrace();
+            return new Mesh();
         }
     }
 
-
     public static void main(String[] args) {
-        Mesh mesh = new Mesh();
-        readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"), mesh);
+        Mesh mesh = readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"));
         mesh.printMesh();
     }
 }

@@ -8,6 +8,7 @@ public class Vertex3D {
     private double z;
     private double w;
 
+    // Create a point by default
     public Vertex3D() {
         this.x = 0;
         this.y = 0;
@@ -42,6 +43,14 @@ public class Vertex3D {
         this.y = other.y;
         this.z = other.z;
         this.w = other.w;
+    }
+
+    public Vertex3D copyFrom(Vertex3D other) {
+        this.x = other.x;
+        this.y = other.y;
+        this.z = other.z;
+        this.w = other.w;
+        return this;
     }
 
     public void convertToVector() {
@@ -204,4 +213,5 @@ public class Vertex3D {
 
         return vertOut;
     }
+
 }

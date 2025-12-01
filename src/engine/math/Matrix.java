@@ -16,6 +16,20 @@ public class Matrix {
         }
     }
 
+    public Matrix(Matrix other) {
+        this(other.matrix);
+    }
+
+    public void copyFrom(Matrix other) {
+        double[][] mat = other.getMatrix();
+        int rows = mat.length;
+        int cols = mat[0].length;
+
+        for (int i = 0; i < rows; i++) {
+            System.arraycopy(mat[i], 0, this.matrix[i], 0, cols);
+        }
+    }
+
     public Matrix(int nbRow, int nbCol) {
         this.matrix = new double[nbRow][nbCol];
     }
@@ -31,14 +45,13 @@ public class Matrix {
         //New up direction
         Vertex3D vScale = Vertex3D.verMultiplicationScalar(Vertex3D.dotProduct(vUp, vNewForward),vNewForward);
         Vertex3D vNewUp = Vertex3D.vertexSubtraction(vUp, vScale);
-        vNewUp.vertNormalisation();
         vNewUp.convertToVector();
+        vNewUp.vertNormalisation();
 
         //New right direction
         Vertex3D vNewRight = Vertex3D.crossProduct(vNewUp, vNewForward);
-        vNewRight.vertNormalisation();
         vNewRight.convertToVector();
-
+        vNewRight.vertNormalisation();
 
         double[][] matTemp = new double[4][4];
         matTemp[0][0] = vNewRight.getX();       matTemp[0][1] = vNewRight.getY();       matTemp[0][2] = vNewRight.getZ();       matTemp[0][3] = 0;

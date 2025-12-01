@@ -20,6 +20,7 @@ public class InputManager implements KeyListener, MouseListener, MouseMotionList
     public void centerMouse(Engine3D engine3D) {
         try {
             Robot robot = new Robot();
+
             Point winPosition = engine3D.getLocationOnScreen();
             Point winPanelCenter = new Point(engine3D.getiWinWidth() /2, engine3D.getiWinHeight() /2);
 
@@ -39,64 +40,64 @@ public class InputManager implements KeyListener, MouseListener, MouseMotionList
         // TRANSLATION
         // Q = Left
         if (engine3D.getKeysPressed()[KeyEvent.VK_Q]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamRight())));
+            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamRight())));
         }
 
         // D = Right
         if (engine3D.getKeysPressed()[KeyEvent.VK_D]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamRight())));
+            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamRight())));
         }
 
         // SHIFT + SPACE = Down
         // SPACE = Up
         if (engine3D.getKeysPressed()[KeyEvent.VK_SHIFT]) {
             if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamUp())));
+                camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamUp())));
             }
         } else {
             if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamUp())));
+                camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamUp())));
             }
         }
 
         // Z = Forward
         if (engine3D.getKeysPressed()[KeyEvent.VK_Z]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamDirection())));
+            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamDirection())));
         }
         // S = Behind
         if (engine3D.getKeysPressed()[KeyEvent.VK_S]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getTranslationCameraSpeed(), camera.getvCamDirection())));
+            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamDirection())));
         }
 
         // ROTATION
         // UP = Trigo X-Axis rotation Pitch
         if (engine3D.getKeysPressed()[KeyEvent.VK_UP]) {
-            camera.setdCamPitch(camera.getdCamPitch() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamPitch(camera.getdCamPitch() + engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
         // DOWN = Horaire X-Axis rotation Pitch
         if (engine3D.getKeysPressed()[KeyEvent.VK_DOWN]) {
-            camera.setdCamPitch(camera.getdCamPitch() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamPitch(camera.getdCamPitch() - engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
         // RIGHT = Trigo Y-Axis rotation Yaw
         if (engine3D.getKeysPressed()[KeyEvent.VK_RIGHT]) {
-            camera.setdCamYaw(camera.getdCamYaw() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamYaw(camera.getdCamYaw() + engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
         // LEFT = Horaire Y-Axis rotation Yaw
         if (engine3D.getKeysPressed()[KeyEvent.VK_LEFT]) {
-            camera.setdCamYaw(camera.getdCamYaw() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamYaw(camera.getdCamYaw() - engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
         // A = Trigo Z-Axis rotation Roll
         if (engine3D.getKeysPressed()[KeyEvent.VK_A]) {
-            camera.setdCamRoll(camera.getdCamRoll() + engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamRoll(camera.getdCamRoll() + engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
         // E = Horaire Y-Axis rotation Roll
         if (engine3D.getKeysPressed()[KeyEvent.VK_E]) {
-            camera.setdCamRoll(camera.getdCamRoll() - engine3D.getRotationCameraSpeed() * engine3D.getDeltaTime());
+            camera.setdCamRoll(camera.getdCamRoll() - engine3D.getdRotationCameraSpeed() * engine3D.getDeltaTime());
         }
 
     }
@@ -116,8 +117,8 @@ public class InputManager implements KeyListener, MouseListener, MouseMotionList
         int dx = winMousePos.x - (int) engine3D.getpWinLastMousePosition().getX();
         int dy = winMousePos.y - (int) engine3D.getpWinLastMousePosition().getY();
 
-        camera.setdCamPitch(camera.getdCamPitch() + engine3D.getRotationCameraSpeed() * -dy * engine3D.getMouseSensibility());
-        camera.setdCamYaw(camera.getdCamYaw() + engine3D.getRotationCameraSpeed() * dx * engine3D.getMouseSensibility());
+        camera.setdCamPitch(camera.getdCamPitch() + engine3D.getdRotationCameraSpeed() * -dy * engine3D.getMouseSensibility());
+        camera.setdCamYaw(camera.getdCamYaw() + engine3D.getdRotationCameraSpeed() * dx * engine3D.getMouseSensibility());
 
         try {
             centerMouse(engine3D);
@@ -125,6 +126,7 @@ public class InputManager implements KeyListener, MouseListener, MouseMotionList
             ex.printStackTrace();
         }
     }
+
 
     // Action mouse motion listener methods
     @Override

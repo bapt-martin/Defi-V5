@@ -18,7 +18,7 @@ public class GeneralData extends JPanel {
         this.add(fpsLabel);
     }
 
-    public void CalcFpsPerSec(Engine3D engine3D) {
+    public void calcFpsPerSec(Engine3D engine3D) {
         engine3D.setNbFrames(engine3D.getNbFrames() + 1);
         long now = System.nanoTime();
 
@@ -31,7 +31,7 @@ public class GeneralData extends JPanel {
         }
     }
 
-    public void CalcFpsPerFrame(Engine3D engine3D) {
+    public void calcFpsPerFrame(Engine3D engine3D) {
         double deltaTime = engine3D.getDeltaTime(); // Time elapsed since last frame
         if (deltaTime > 0) {
             double currentFps = 1.0 / deltaTime;

@@ -5,8 +5,12 @@ public class Matrix {
     // ROW-MAJOR CONVENTION
     private double[][] matrix;
 
+    public Matrix(int nbRow, int nbCol) {
+        this.matrix = new double[nbRow][nbCol];
+    }
+
     public Matrix() {
-        this.matrix = new double[4][4];
+        this(new Matrix(4,4));
     }
 
     public Matrix(double[][] matrix) {
@@ -30,28 +34,21 @@ public class Matrix {
         }
     }
 
-    public Matrix(int nbRow, int nbCol) {
-        this.matrix = new double[nbRow][nbCol];
-    }
-
-    public static Matrix matCreateCamReferential(Vertex3D pTargetPosition, Vertex3D vTargetDirection, Vertex3D vUp) {
-        Vertex3D pTranslatedTarget = Vertex3D.vertexAddition(pTargetPosition, vTargetDirection);
+    public static Matrix matCreateCamReferential(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
+        Vertex3D pTranslatedTarget = pTargetPosition.translate(vTargetDirection);
 
         //New forward direction
-        Vertex3D vNewForward = Vertex3D.vertexSubtraction(pTranslatedTarget, pTargetPosition);
-        vNewForward.convertToVector();
-        vNewForward.vertNormalisation();
+        Vector3D vNewForward = new Vector3D(pTranslatedTarget.sub(pTargetPosition));
+        vNewForward.normalized();
 
         //New up direction
-        Vertex3D vScale = Vertex3D.verMultiplicationScalar(Vertex3D.dotProduct(vUp, vNewForward),vNewForward);
-        Vertex3D vNewUp = Vertex3D.vertexSubtraction(vUp, vScale);
-        vNewUp.convertToVector();
-        vNewUp.vertNormalisation();
+        Vector3D vScale = vNewForward.scale(vUp.dotProduct(vNewForward));
+        Vector3D vNewUp = vUp.sub(vScale);
+        vNewUp.normalized();
 
         //New right direction
-        Vertex3D vNewRight = Vertex3D.crossProduct(vNewUp, vNewForward);
-        vNewRight.convertToVector();
-        vNewRight.vertNormalisation();
+        Vector3D vNewRight = vNewUp.crossProduct(vNewForward);
+        vNewRight.normalized();
 
         double[][] matTemp = new double[4][4];
         matTemp[0][0] = vNewRight.getX();       matTemp[0][1] = vNewRight.getY();       matTemp[0][2] = vNewRight.getZ();       matTemp[0][3] = 0;
@@ -137,9 +134,8 @@ public class Matrix {
         return new Matrix(matRotZ);
     }
 
-    public static Matrix matCreateRotationAroundAxis4x4(double theta, Vertex3D vAxis) {
-        vAxis.vertNormalisation();
-        vAxis.convertToVector();
+    public static Matrix matCreateRotationAroundAxis4x4(double theta, Vector3D vAxis) {
+        vAxis.normalized();
         double[][] matRotationAxis = new double[4][4];
 
         double dUx = vAxis.getX();
@@ -175,13 +171,13 @@ public class Matrix {
     }
 
     public static Matrix matCreateTranslation4x4(double x, double y, double z) {
-        Matrix matrixTranslation = matCreateIdentity(4,4);
+        double[][] matrixTranslation = matCreateIdentity(4,4).getMatrix();
 
-        matrixTranslation.getMatrix()[3][0] = x;
-        matrixTranslation.getMatrix()[3][1] = y;
-        matrixTranslation.getMatrix()[3][2] = z;
+        matrixTranslation[3][0] = x;
+        matrixTranslation[3][1] = y;
+        matrixTranslation[3][2] = z;
 
-        return matrixTranslation;
+        return new Matrix(matrixTranslation);
     }
 
     public void matPrint() {

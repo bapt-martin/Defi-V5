@@ -13,8 +13,8 @@ public class Quaternion {
         this.z = 0;
     }
 
-    public Quaternion(double angle, Vertex3D axis) {
-        axis.vertNormalisation();
+    public Quaternion(double angle, Vector3D axis) {
+        axis.normalized();
         double halfAngle = angle / 2;
         double s = Math.sin(halfAngle);
 

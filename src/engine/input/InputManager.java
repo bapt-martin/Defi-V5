@@ -2,7 +2,6 @@ package engine.input;
 
 import engine.core.Camera;
 import engine.core.Engine3D;
-import engine.math.Vertex3D;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -40,33 +39,38 @@ public class InputManager implements KeyListener, MouseListener, MouseMotionList
         // TRANSLATION
         // Q = Left
         if (engine3D.getKeysPressed()[KeyEvent.VK_Q]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamRight())));
+            camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamRight().scale(+ engine3D.getdTranslationCameraSpeed())));
         }
 
         // D = Right
         if (engine3D.getKeysPressed()[KeyEvent.VK_D]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamRight())));
+            camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamRight().scale(- engine3D.getdTranslationCameraSpeed())));
+            //camera.setpCamPosition(camera.getpCamPosition().tupleSubtraction(camera.getvCamRight().scalarMultiplication(engine3D.getdTranslationCameraSpeed())));
         }
 
         // SHIFT + SPACE = Down
         // SPACE = Up
         if (engine3D.getKeysPressed()[KeyEvent.VK_SHIFT]) {
             if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamUp())));
+                camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamUp().scale(- engine3D.getdTranslationCameraSpeed())));
+                //camera.setpCamPosition(camera.getpCamPosition().tupleSubtraction(camera.getvCamUp().scalarMultiplication(engine3D.getdTranslationCameraSpeed())));
             }
         } else {
             if (engine3D.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamUp())));
+                camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamUp().scale(+ engine3D.getdTranslationCameraSpeed())));
+                //camera.setpCamPosition(camera.getpCamPosition().tupleAddition(camera.getvCamUp().scalarMultiplication(engine3D.getdTranslationCameraSpeed())));
             }
         }
 
         // Z = Forward
         if (engine3D.getKeysPressed()[KeyEvent.VK_Z]) {
-            camera.setpCamPosition(Vertex3D.vertexAddition(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamDirection())));
+            camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamDirection().scale(+ engine3D.getdTranslationCameraSpeed())));
+//            camera.setpCamPosition(camera.getpCamPosition().tupleAddition(camera.getvCamDirection().scalarMultiplication(engine3D.getdTranslationCameraSpeed())));
         }
         // S = Behind
         if (engine3D.getKeysPressed()[KeyEvent.VK_S]) {
-            camera.setpCamPosition(Vertex3D.vertexSubtraction(camera.getpCamPosition(), Vertex3D.verMultiplicationScalar(engine3D.getdTranslationCameraSpeed(), camera.getvCamDirection())));
+            camera.setpCamPosition(camera.getpCamPosition().translate(camera.getvCamDirection().scale(- engine3D.getdTranslationCameraSpeed())));
+//            camera.setpCamPosition(camera.getpCamPosition().tupleSubtraction(camera.getvCamDirection().scalarMultiplication(engine3D.getdTranslationCameraSpeed())));
         }
 
         // ROTATION

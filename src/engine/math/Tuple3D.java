@@ -36,7 +36,7 @@ public class Tuple3D {
         this.w = other.w;
     }
 
-    public Tuple3D divide(double divisor) {
+    public Tuple3D divided(double divisor) {
         double x = 0;
         double y = 0;
         double z = 0;
@@ -50,7 +50,17 @@ public class Tuple3D {
         return new Tuple3D(x,y,z);
     }
 
-    public Tuple3D scale(double factor) {
+    public Tuple3D divideInPlace(double divisor) {
+        if (divisor != 0) {
+            this.setX(this.getX() / divisor);
+            this.setY(this.getY() / divisor);
+            this.setZ(this.getZ() / divisor);
+        }
+
+        return this;
+    }
+
+    public Tuple3D scaled(double factor) {
         double x = 0;
         double y = 0;
         double z = 0;
@@ -60,6 +70,14 @@ public class Tuple3D {
         z = this.z * factor;
 
         return new Tuple3D(x,y,z);
+    }
+
+    public Tuple3D scaleInPlace(double factor) {
+        this.setX(this.x * factor);
+        this.setY(this.y * factor);
+        this.setZ(this.z * factor);
+
+        return this;
     }
 
     public Tuple3D crossProduct(Tuple3D tupleIn2) {
@@ -88,7 +106,7 @@ public class Tuple3D {
                            this.z + tupleIn2.z);
     }
 
-    public Tuple3D transform(Matrix mat) {
+    public Tuple3D transformed(Matrix mat) {
         double[][] M = mat.getMatrix();
         double xIn = this.x;
         double yIn = this.y;
@@ -103,7 +121,20 @@ public class Tuple3D {
         return new Tuple3D(x,y,z,w);
     }
 
+    public Tuple3D transformInPlace(Matrix mat) {
+        double[][] M = mat.getMatrix();
+        double xIn = this.x;
+        double yIn = this.y;
+        double zIn = this.z;
+        double wIn = this.w;
 
+        this.setX(xIn * M[0][0] + yIn * M[1][0] + zIn * M[2][0] + wIn * M[3][0]);
+        this.setY(xIn * M[0][1] + yIn * M[1][1] + zIn * M[2][1] + wIn * M[3][1]);
+        this.setZ(xIn * M[0][2] + yIn * M[1][2] + zIn * M[2][2] + wIn * M[3][2]);
+        this.setW(xIn * M[0][3] + yIn * M[1][3] + zIn * M[2][3] + wIn * M[3][3]);
+
+        return this;
+    }
 
     public double getLength() {
         return sqrt(this.x * this.x +

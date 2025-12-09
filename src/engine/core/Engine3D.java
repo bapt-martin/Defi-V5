@@ -101,118 +101,51 @@ public class Engine3D extends JPanel {
 //        System.out.println(deltaTime);
 
         // Actualisation of theta
-//        this.dTheta += 0.05;
+        this.dtheta += 0.05;
 //        System.out.println(this.theta);
 
         // ROTATION OF THE OBJECT IN THE WORLD (adding a rotation mat per object in the future)
-        // Rotation matrices Z-axis
-        Matrix matRotZ = Matrix.matCreateRotationZ4x4(this.dtheta);
-
-        // Rotation matrices Y-axis
-        Matrix matRotY = Matrix.matCreateRotationY4x4(this.dtheta * 0.5);
-
-        // Rotation matrices X-axis
-        Matrix matRotX = Matrix.matCreateRotationX4x4(this.dtheta * 1.5);
-
-        // TOTAL ROTATION
-        Matrix matRotationTot = Matrix.matMultiplication4x4(matRotZ, Matrix.matMultiplication4x4(matRotX,matRotY));
-        System.out.println("Mesh tris = " + mesh.getMeshTriangle().size());
-
-        // Z-Axis Offset
-        Matrix matTranslation = Matrix.matCreateTranslation4x4(0,0,16);
-
         // COMBINATION ROTATION + TRANSLATION
-        Matrix matWorld = Matrix.matMultiplication4x4(matRotationTot,matTranslation);
+        Matrix matWorld = Matrix.createWorldTransform(this.dtheta * 0,this.dtheta * 0,0,0,0,16);
 
         inputManager.handleKeyPress();
         camera.camUpdate();
         generalData.calcFpsPerFrame(this);
 
-//        System.out.println("target "+vertTarget.toString() +" : " + vertTargetYPR.toString());
-//        System.out.println("right  "+vertRight.toString()  +" : " + vertRightYPR.toString());
-//        System.out.println("up     "+vertUp.toString()     +" : " + vertUpYPR.toString());
-
         // Creation of the camera matrix
-        Matrix matCameraWorld = Matrix.matCreateCamReferential(camera.getpCamPosition(), camera.getvCamDirection(), camera.getvCamUp());
-
-        // View matrix for the camera
-        Matrix matWorldCamera = Matrix.matQuickInverse(matCameraWorld);
+        Matrix matCameraWorld = Matrix.createCamReferential(camera.getpCamPosition(), camera.getvCamDirection(), camera.getvCamUp());
 
         // engine.math.Triangle projection and drawing
         List<Triangle> trisToRaster = new ArrayList<>();
         for (Triangle triangleToProject : mesh.getMeshTriangle()) {
-            Triangle triTransformed = new Triangle();
-            Triangle triViewed = new Triangle();
 
             // Z-axis, Y-axis and X-axis Rotation
-            triTransformed.getVertices()[0] = triangleToProject.getVertices()[0].transform(matWorld);
-            triTransformed.getVertices()[1] = triangleToProject.getVertices()[1].transform(matWorld);
-            triTransformed.getVertices()[2] = triangleToProject.getVertices()[2].transform(matWorld);
-
-            // Line creation for determining the normal
-            Vector3D vLine1 = triTransformed.getVertices()[1].sub(triTransformed.getVertices()[0]);
-            Vector3D vLine2 = triTransformed.getVertices()[2].sub(triTransformed.getVertices()[0]);
-
-
-            Vector3D vNormal = vLine1.crossProduct(vLine2);
-            vNormal.normalized();
+            Triangle triTransformed = triangleToProject.transformed(matWorld);
 
             // Casting the ray of the camera
             Vector3D vCameraRay = triTransformed.getVertices()[0].sub(camera.getpCamPosition());
 
             // Checking if the ray of the camera is in sight of the normale
-            if (vNormal.dotProduct(vCameraRay) < 0) {
+            if (triTransformed.getNormal().dotProduct(vCameraRay) < 0) {
 
-                Vector3D vLightDirection = new Vector3D(0,0,-1); // Pseudo definition of the light source
-                vLightDirection.normalized();
-
-                double dpLightNorm = vNormal.dotProduct(vLightDirection);
-                Color colorTri = Triangle.grayScale(dpLightNorm);
-
-                // Definition of the greyscale value for the triangle regarding its orientation
-                triTransformed.setColor(colorTri);
+                triTransformed.setLighting(new Vector3D(0,0,-1));
 
                 // Convert World Space in the Worldview of the camera
-                triViewed.getVertices()[0] = triTransformed.getVertices()[0].transform(matWorldCamera);
-                triViewed.getVertices()[1] = triTransformed.getVertices()[1].transform(matWorldCamera);
-                triViewed.getVertices()[2] = triTransformed.getVertices()[2].transform(matWorldCamera);
-                triViewed.setColor(triTransformed.getColor()); // Color transfer
+                Triangle triViewed = triTransformed.transformed(matCameraWorld);
 
                 Triangle[] trisClipped = new Triangle[2];
                 trisClipped[0] = new Triangle();
                 trisClipped[1] = new Triangle();
 
                 Plane frontClippingPlane = new Plane(new Vertex3D(0,0, 0.1), new Vector3D(0,0,1));
-                int nbClippedTris = frontClippingPlane.trisClippingPlane(triViewed, trisClipped[0], trisClipped[1]);
+                int nbClippedTris = frontClippingPlane.clipTriangleAgainstPlane(triViewed, trisClipped[0], trisClipped[1]);
 
                 for (int n = 0; n < nbClippedTris; n++) {
-                    Triangle triProjected = new Triangle();
+                    trisClipped[n].projectToScreenInPlace(this.getCamera().getMatProjection(), iWinHeight, iWinWidth);
 
-                    for (int ind = 0; ind < 3; ind++ ) {
-                        // Projecting 3D into 2D
-                        triProjected.getVertices()[ind] = trisClipped[n].getVertices()[ind].transform(this.camera.getMatProjection());
-
-                        // Normalization of the vertex
-                        triProjected.getVertices()[ind] = triProjected.getVertices()[ind].divide(triProjected.getVertices()[ind].getW());
-
-                        // X/Y Inverted so need to put them back???
-                        triProjected.getVertices()[ind].setX(triProjected.getVertices()[ind].getX() * -1);
-                        triProjected.getVertices()[ind].setY(triProjected.getVertices()[ind].getY() * -1);
-
-                        // Offset into visible normalised space
-                        Vector3D vOffsetView = new Vector3D(1,1,0);
-                        triProjected.getVertices()[ind] = triProjected.getVertices()[ind].translate(vOffsetView);
-
-                        // Scaling to screen dimension
-                        triProjected.getVertices()[ind].setX(triProjected.getVertices()[ind].getX() * 0.5 * iWinHeight);
-                        triProjected.getVertices()[ind].setY(triProjected.getVertices()[ind].getY() * 0.5 * iWinWidth);
-
-                        // Color transfer
-                        triProjected.setColor(trisClipped[n].getColor());
-                        }
                     // Save for later rasterization
-                    trisToRaster.add(triProjected);
-                    }
+                    trisToRaster.add(trisClipped[n]);
+                }
             }
         }
 
@@ -229,7 +162,7 @@ public class Engine3D extends JPanel {
 
             for (int p = 0; p < 4; p++) {
                 int nbTrisToAdd = 1;
-                List<Triangle> futurTestToClip = new ArrayList<>();
+                List<Triangle> futureTestToClip = new ArrayList<>();
                 for(Triangle test : clippingQueue) {
                     Triangle[] clipped = new Triangle[2];
                     clipped[0] = new Triangle();
@@ -244,14 +177,14 @@ public class Engine3D extends JPanel {
                         case 3 -> new Plane(new Vertex3D(iWinWidth - 1, 0, 0), new Vector3D(-1, 0, 0));
                         default -> planeToClip;
                     };
-                    nbTrisToAdd = planeToClip.trisClippingPlane(test, clipped[0], clipped[1]);
+                    nbTrisToAdd = planeToClip.clipTriangleAgainstPlane(test, clipped[0], clipped[1]);
 
                     for (int w = 0; w < nbTrisToAdd; w++) {
                         Triangle temp = new Triangle(clipped[w]);
-                        futurTestToClip.add(temp);
+                        futureTestToClip.add(temp);
                     }
                 }
-                clippingQueue = futurTestToClip;
+                clippingQueue = futureTestToClip;
 
             }
 

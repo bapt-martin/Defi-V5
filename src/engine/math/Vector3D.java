@@ -18,7 +18,7 @@ public class Vector3D extends Tuple3D{
         return new Vector3D(super.crossProduct(tupleIn2));
     }
 
-    public void normalized() {
+    public Vector3D selfNormalize() {
         if (this.getLength() != 0) {
             double vectorLength = this.getLength();
 
@@ -26,16 +26,41 @@ public class Vector3D extends Tuple3D{
             this.setY(this.getY() / vectorLength);
             this.setZ(this.getZ() / vectorLength);
         }
+        return this;
+    }
+
+    public Vector3D normalized() {
+        if (this.getLength() != 0) {
+            double vectorLength = this.getLength();
+
+            double x = this.getX() / vectorLength;
+            double y = this.getY() / vectorLength;
+            double z = this.getZ() / vectorLength;
+        }
+
+        return new Vector3D(x,y,z);
     }
 
     @Override
-    public Vector3D scale(double factor) {
-        return new Vector3D(super.scale(factor));
+    public Vector3D scaled(double factor) {
+        return new Vector3D(super.scaled(factor));
     }
 
     @Override
-    public Vector3D divide(double divisor) {
-        return new Vector3D(super.divide(divisor));
+    public Vector3D divided(double divisor) {
+        return new Vector3D(super.divided(divisor));
+    }
+
+    @Override
+    public Vector3D divideInPlace(double divisor) {
+        super.divideInPlace(divisor);
+        return this;
+    }
+
+    @Override
+    public Vector3D scaleInPlace(double factor) {
+        super.scaleInPlace(factor);
+        return this;
     }
 
     @Override
@@ -49,7 +74,13 @@ public class Vector3D extends Tuple3D{
     }
 
     @Override
-    public Vector3D transform(Matrix matIn) {
-        return new Vector3D(super.transform(matIn));
+    public Vector3D transformed(Matrix matIn) {
+        return new Vector3D(super.transformed(matIn));
+    }
+
+    @Override
+    public Vector3D transformInPlace(Matrix mat) {
+        super.transformInPlace(mat);
+        return this;
     }
 }

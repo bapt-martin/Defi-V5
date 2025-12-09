@@ -19,21 +19,41 @@ public class Vertex3D extends Tuple3D{
     }
 
     @Override
-    public Vertex3D scale(double factor) {
-        return new Vertex3D(super.scale(factor));
+    public Vertex3D scaled(double factor) {
+        return new Vertex3D(super.scaled(factor));
     }
 
     @Override
-    public Vertex3D divide(double divisor) {
-        return new Vertex3D(super.divide(divisor));
+    public Vertex3D divideInPlace(double divisor) {
+        super.divideInPlace(divisor);
+        return this;
     }
 
-    public Vertex3D translate(Vector3D vectTranslation) {
+    @Override
+    public Vertex3D scaleInPlace(double factor) {
+        super.scaleInPlace(factor);
+        return this;
+    }
+
+    @Override
+    public Vertex3D divided(double divisor) {
+        return new Vertex3D(super.divided(divisor));
+    }
+
+    public Vertex3D translated(Vector3D vectTranslation) {
         double x = this.getX() + vectTranslation.getX();
         double y = this.getY() + vectTranslation.getY();
         double z = this.getZ() + vectTranslation.getZ();
 
         return new Vertex3D(x,y,z);
+    }
+
+    public Vertex3D translateInPlace(Vector3D vectTranslation) {
+        this.setX(this.getX() + vectTranslation.getX());
+        this.setY(this.getY() + vectTranslation.getY());
+        this.setZ(this.getZ() + vectTranslation.getZ());
+
+        return this;
     }
 
 
@@ -48,8 +68,14 @@ public class Vertex3D extends Tuple3D{
     }
 
     @Override
-    public Vertex3D transform(Matrix matIn) {
-        return new Vertex3D(super.transform(matIn));
+    public Vertex3D transformed(Matrix matIn) {
+        return new Vertex3D(super.transformed(matIn));
+    }
+
+    @Override
+    public Vertex3D transformInPlace(Matrix mat) {
+        super.transformInPlace(mat);
+        return this;
     }
 
     @Override

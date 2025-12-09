@@ -34,48 +34,66 @@ public class Matrix {
         }
     }
 
-    public static Matrix matCreateCamReferential(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
-        Vertex3D pTranslatedTarget = pTargetPosition.translate(vTargetDirection);
+    public static Matrix createEulerRotation(double theta, double phi, double psi) {
+        Matrix matRotX = Matrix.createRotationZ(theta);
+        Matrix matRotY = Matrix.createRotationY(phi);
+        Matrix matRotZ = Matrix.createRotationX(psi);
+
+        return matRotX.multiply(matRotY).multiply(matRotZ);
+    }
+
+    public static Matrix createWorldTransform(double theta, double phi, double psi, double x, double y, double z) {
+        Matrix matRotationTot = Matrix.createEulerRotation(theta,phi,psi);
+
+        Matrix matTranslation = Matrix.createTranslation(x,y,z);
+
+        return matRotationTot.multiply(matTranslation);
+    }
+
+    public static Matrix createCamReferential(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
+        Vertex3D pTranslatedTarget = pTargetPosition.translated(vTargetDirection);
 
         //New forward direction
-        Vector3D vNewForward = new Vector3D(pTranslatedTarget.sub(pTargetPosition));
-        vNewForward.normalized();
+        Vector3D vNewForward = pTranslatedTarget.sub(pTargetPosition);
+        vNewForward.selfNormalize();
 
         //New up direction
-        Vector3D vScale = vNewForward.scale(vUp.dotProduct(vNewForward));
+        Vector3D vScale = vNewForward.scaled(vUp.dotProduct(vNewForward));
         Vector3D vNewUp = vUp.sub(vScale);
-        vNewUp.normalized();
+        vNewUp.selfNormalize();
 
         //New right direction
         Vector3D vNewRight = vNewUp.crossProduct(vNewForward);
-        vNewRight.normalized();
+        vNewRight.selfNormalize();
 
-        double[][] matTemp = new double[4][4];
-        matTemp[0][0] = vNewRight.getX();       matTemp[0][1] = vNewRight.getY();       matTemp[0][2] = vNewRight.getZ();       matTemp[0][3] = 0;
-        matTemp[1][0] = vNewUp.getX();          matTemp[1][1] = vNewUp.getY();          matTemp[1][2] = vNewUp.getZ();          matTemp[1][3] = 0;
-        matTemp[2][0] = vNewForward.getX();     matTemp[2][1] = vNewForward.getY();     matTemp[2][2] = vNewForward.getZ();     matTemp[2][3] = 0;
-        matTemp[3][0] = pTargetPosition.getX(); matTemp[3][1] = pTargetPosition.getY(); matTemp[3][2] = pTargetPosition.getZ(); matTemp[3][3] = 1;
+        double[][] matOut = new double[4][4];
+        matOut[0][0] = vNewRight.getX();       matOut[0][1] = vNewRight.getY();       matOut[0][2] = vNewRight.getZ();       matOut[0][3] = 0;
+        matOut[1][0] = vNewUp.getX();          matOut[1][1] = vNewUp.getY();          matOut[1][2] = vNewUp.getZ();          matOut[1][3] = 0;
+        matOut[2][0] = vNewForward.getX();     matOut[2][1] = vNewForward.getY();     matOut[2][2] = vNewForward.getZ();     matOut[2][3] = 0;
+        matOut[3][0] = pTargetPosition.getX(); matOut[3][1] = pTargetPosition.getY(); matOut[3][2] = pTargetPosition.getZ(); matOut[3][3] = 1;
 
-        return new Matrix(matTemp);
+        return new Matrix(matOut).invertRotationTranslation();
     }
 
-    public static Matrix matQuickInverse(Matrix matIn){ //Only Rotation/Translation matrices
-        double[][] mat = matIn.getMatrix();
+    public Matrix invertRotationTranslation(){ //Only Rotation/Translation matrices
+        double[][] mat = this.getMatrix();
         double[][] matInverse = new double[4][4];
 
         matInverse[0][0] = mat[0][0]; matInverse[0][1] = mat[1][0]; matInverse[0][2] = mat[2][0];
         matInverse[1][0] = mat[0][1]; matInverse[1][1] = mat[1][1]; matInverse[1][2] = mat[2][1];
         matInverse[2][0] = mat[0][2]; matInverse[2][1] = mat[1][2]; matInverse[2][2] = mat[2][2];
+                                                                                                  matInverse[3][3] = 1;
 
         matInverse[3][0] = -(mat[3][0] * matInverse[0][0] + mat[3][1] * matInverse[1][0] + mat[3][2] * matInverse[2][0]);
         matInverse[3][1] = -(mat[3][0] * matInverse[0][1] + mat[3][1] * matInverse[1][1] + mat[3][2] * matInverse[2][1]);
         matInverse[3][2] = -(mat[3][0] * matInverse[0][2] + mat[3][1] * matInverse[1][2] + mat[3][2] * matInverse[2][2]);
-        matInverse[3][3] = 1;
 
-        return new Matrix(matInverse);
+        this.setMatrix(matInverse);
+
+        return this;
     }
 
-    public static Matrix matCreateIdentity(int nbRow, int nbCol) {
+    public static Matrix createIdentity(int nbRow, int nbCol) {
         double[][] matIdentity = new double[nbRow][nbCol];
 
         for (int i = 0; i< nbRow; i++) {
@@ -89,7 +107,7 @@ public class Matrix {
         return new Matrix(matIdentity);
     }
 
-    public static Matrix matCreateRotationX4x4(double theta){
+    public static Matrix createRotationX(double theta){
         double[][] matRotX = new double[4][4];
 
         matRotX[0][0] = 1;
@@ -104,7 +122,7 @@ public class Matrix {
         return new Matrix(matRotX);
     }
 
-    public static Matrix matCreateRotationY4x4(double theta) {
+    public static Matrix createRotationY(double theta) {
         double[][] matRotY = new double[4][4];
 
         matRotY[0][0] = Math.cos(theta);
@@ -119,7 +137,7 @@ public class Matrix {
         return new Matrix(matRotY);
     }
 
-    public static Matrix matCreateRotationZ4x4(double theta){
+    public static Matrix createRotationZ(double theta){
         double[][] matRotZ = new double[4][4];
 
         matRotZ[0][0] = cos(theta);
@@ -134,8 +152,8 @@ public class Matrix {
         return new Matrix(matRotZ);
     }
 
-    public static Matrix matCreateRotationAroundAxis4x4(double theta, Vector3D vAxis) {
-        vAxis.normalized();
+    public static Matrix createRotationAroundAxis(double theta, Vector3D vAxis) {
+        vAxis.selfNormalize();
         double[][] matRotationAxis = new double[4][4];
 
         double dUx = vAxis.getX();
@@ -153,8 +171,8 @@ public class Matrix {
         return new Matrix(matRotationAxis);
     }
 
-    public static Matrix matMultiplication4x4(Matrix matIn1, Matrix matIn2 ) {
-        double[][] mat1 = matIn1.getMatrix();
+    public Matrix multiply(Matrix matIn2) {
+        double[][] mat1 = this.getMatrix();
         double[][] mat2 = matIn2.getMatrix();
         double[][] matResult = new double[4][4];
 
@@ -170,8 +188,8 @@ public class Matrix {
         return new Matrix(matResult);
     }
 
-    public static Matrix matCreateTranslation4x4(double x, double y, double z) {
-        double[][] matrixTranslation = matCreateIdentity(4,4).getMatrix();
+    public static Matrix createTranslation(double x, double y, double z) {
+        double[][] matrixTranslation = createIdentity(4,4).getMatrix();
 
         matrixTranslation[3][0] = x;
         matrixTranslation[3][1] = y;

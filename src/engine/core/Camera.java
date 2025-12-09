@@ -88,39 +88,39 @@ public class Camera {
         Vector3D vRight  = new Vector3D(1,0,0);
 
         // Rotation around local Y-axis
-        Matrix matCameraRotYaw = Matrix.matCreateRotationAroundAxis4x4(dCamYaw,vUp);
+        Matrix matCameraRotYaw = Matrix.createRotationAroundAxis(dCamYaw,vUp);
 
-        Vector3D vTargetY = vTarget.transform(matCameraRotYaw);
-        Vector3D vRightY  = vRight.transform(matCameraRotYaw);
-        Vector3D vUpY     = vUp.transform(matCameraRotYaw);
+        Vector3D vTargetY = vTarget.transformed(matCameraRotYaw);
+        Vector3D vRightY  = vRight.transformed(matCameraRotYaw);
+        Vector3D vUpY     = vUp.transformed(matCameraRotYaw);
 
-        vTargetY.normalized();
-        vRightY.normalized();
-        vUpY.normalized();
+        vTargetY.selfNormalize();
+        vRightY.selfNormalize();
+        vUpY.selfNormalize();
 
         // Rotation around local X-axis
         dCamPitch = Math.max(-89.0*Math.PI/180.0, Math.min(89.0*Math.PI/180.0, dCamPitch));
 
-        Matrix matCameraRotPitch = Matrix.matCreateRotationAroundAxis4x4(dCamPitch,vRightY);
+        Matrix matCameraRotPitch = Matrix.createRotationAroundAxis(dCamPitch,vRightY);
 
-        Vector3D vTargetYP = vTargetY.transform(matCameraRotPitch);
-        Vector3D vRightYP  = vRightY.transform(matCameraRotPitch);
-        Vector3D vUpYP     = vUpY.transform(matCameraRotPitch);
+        Vector3D vTargetYP = vTargetY.transformed(matCameraRotPitch);
+        Vector3D vRightYP  = vRightY.transformed(matCameraRotPitch);
+        Vector3D vUpYP     = vUpY.transformed(matCameraRotPitch);
 
-        vTargetYP.normalized();
-        vRightYP.normalized();
-        vUpYP.normalized();
+        vTargetYP.selfNormalize();
+        vRightYP.selfNormalize();
+        vUpYP.selfNormalize();
 
         // Rotation around local Z-axis
-        Matrix matCameraRotRoll = Matrix.matCreateRotationAroundAxis4x4(dCamRoll,vTargetYP);
+        Matrix matCameraRotRoll = Matrix.createRotationAroundAxis(dCamRoll,vTargetYP);
 
-        Vector3D vTargetYPR = vTargetYP.transform(matCameraRotRoll);
-        Vector3D vRightYPR  = vRightYP.transform(matCameraRotRoll);
-        Vector3D vUpYPR     = vUpYP.transform(matCameraRotRoll);
+        Vector3D vTargetYPR = vTargetYP.transformed(matCameraRotRoll);
+        Vector3D vRightYPR  = vRightYP.transformed(matCameraRotRoll);
+        Vector3D vUpYPR     = vUpYP.transformed(matCameraRotRoll);
 
-        vTargetYPR.normalized();
-        vRightYPR.normalized();
-        vUpYPR.normalized();
+        vTargetYPR.selfNormalize();
+        vRightYPR.selfNormalize();
+        vUpYPR.selfNormalize();
 
         vCamDirection = new Vector3D(vTargetYPR);
         vCamUp        = new Vector3D(vUpYPR);

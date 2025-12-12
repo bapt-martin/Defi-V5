@@ -1,5 +1,7 @@
 package engine.math;
 
+import engine.core.Camera;
+
 public class Vertex3D extends Tuple3D{
     public Vertex3D() {
         super();
@@ -55,6 +57,7 @@ public class Vertex3D extends Tuple3D{
 
         return this;
     }
+
 
 
     @Override

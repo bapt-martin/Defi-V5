@@ -1,5 +1,8 @@
 package engine.math;
 
+import engine.core.Camera;
+import engine.core.Engine3D;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,8 +76,6 @@ public class Mesh {
             System.out.printf("  [%d] %d, %d, %d%n", i, f[0], f[1], f[2]);
         }
     }
-
-    
 
     public String getMeshName() {
         return meshName;

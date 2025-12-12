@@ -34,6 +34,30 @@ public class Matrix {
         }
     }
 
+    public void rotateBasisInPlace(Vector3D[] localAxes) {
+        for (int i = 0; i<3; i++) {
+            localAxes[i] = localAxes[i].transformInPlace(this);
+            localAxes[i].normalizeInPlace();
+        }
+    }
+
+    public static Matrix createProjectionMatrix(double far, double near, double fov, int width, int height) {
+        double q = far / (far - near);
+        double aspectRatio = (double) width / height;
+        double scalingFactorRad = 1 / tan(fov * 0.5 / 180 * Math.PI);
+
+        double[][] matProj = new double[4][4];
+        matProj[0][0] = aspectRatio * scalingFactorRad;
+        matProj[1][1] = scalingFactorRad;
+        matProj[2][2] = q;
+        matProj[3][3] = 0;
+
+        matProj[3][2] = -near * q;
+        matProj[2][3] = 1;
+
+        return new Matrix(matProj);
+    }
+
     public static Matrix createEulerRotation(double theta, double phi, double psi) {
         Matrix matRotX = Matrix.createRotationZ(theta);
         Matrix matRotY = Matrix.createRotationY(phi);
@@ -42,7 +66,7 @@ public class Matrix {
         return matRotX.multiply(matRotY).multiply(matRotZ);
     }
 
-    public static Matrix createWorldTransform(double theta, double phi, double psi, double x, double y, double z) {
+    public static Matrix createWorldTransformMatrix(double theta, double phi, double psi, double x, double y, double z) {
         Matrix matRotationTot = Matrix.createEulerRotation(theta,phi,psi);
 
         Matrix matTranslation = Matrix.createTranslation(x,y,z);
@@ -50,21 +74,21 @@ public class Matrix {
         return matRotationTot.multiply(matTranslation);
     }
 
-    public static Matrix createCamReferential(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
+    public static Matrix createViewMatrix(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
         Vertex3D pTranslatedTarget = pTargetPosition.translated(vTargetDirection);
 
         //New forward direction
         Vector3D vNewForward = pTranslatedTarget.sub(pTargetPosition);
-        vNewForward.selfNormalize();
+        vNewForward.normalizeInPlace();
 
         //New up direction
         Vector3D vScale = vNewForward.scaled(vUp.dotProduct(vNewForward));
         Vector3D vNewUp = vUp.sub(vScale);
-        vNewUp.selfNormalize();
+        vNewUp.normalizeInPlace();
 
         //New right direction
         Vector3D vNewRight = vNewUp.crossProduct(vNewForward);
-        vNewRight.selfNormalize();
+        vNewRight.normalizeInPlace();
 
         double[][] matOut = new double[4][4];
         matOut[0][0] = vNewRight.getX();       matOut[0][1] = vNewRight.getY();       matOut[0][2] = vNewRight.getZ();       matOut[0][3] = 0;
@@ -153,7 +177,7 @@ public class Matrix {
     }
 
     public static Matrix createRotationAroundAxis(double theta, Vector3D vAxis) {
-        vAxis.selfNormalize();
+        vAxis.normalizeInPlace();
         double[][] matRotationAxis = new double[4][4];
 
         double dUx = vAxis.getX();

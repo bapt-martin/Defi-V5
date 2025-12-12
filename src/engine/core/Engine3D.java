@@ -4,27 +4,25 @@ import engine.input.InputManager;
 import engine.io.Document;
 import engine.math.*;
 import engine.overlay.GeneralData;
+import engine.renderer.Pipeline;
 
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Engine3D extends JPanel {
     private Mesh mesh;
     private Camera camera;
     private InputManager inputManager;
     private GeneralData generalData;
+    private Pipeline pipeline;
 
-    private int iWinWidth;
-    private int iWinHeight;
+    private int windowWidth = 0;
+    private int windowWHeight = 0;
 
-    private double dtheta;
+    private double worldRotationAngle;
 
     private final boolean[] keysPressed = new boolean[256]; //move to imput manager
-    private final double dTranslationCameraSpeed = 0.1;//Move to camera
-    private final double dRotationCameraSpeed = 0.5;//Move to camera
 
     private Vertex3D pWinLastMousePosition;// To input manager?
     private final double mouseSensibility = 0.01;// To input manager?
@@ -41,35 +39,34 @@ public class Engine3D extends JPanel {
     private int nbTriRender = 0;
 
     public Engine3D(int iWidthInit, int iHeightInit) {
-        this.iWinWidth = iWidthInit;
-        this.iWinHeight = iHeightInit;
-
         this.camera = new Camera(0.1,1000,90);
 
-        this.dtheta = 0;
+        this.worldRotationAngle = 0;
 
-        setBackground(new Color(150,150,200));
+        this.setBackground(new Color(150,150,200));
 
-        setFocusable(true);
-        setFocusTraversalKeysEnabled(false);
-        requestFocusInWindow();
+        this.setFocusable(true);
+        this.setFocusTraversalKeysEnabled(false);
+        this.requestFocusInWindow();
 
         this.inputManager = new InputManager(this,this.camera);
-        addKeyListener(inputManager);
-        addMouseListener(inputManager);
-        addMouseMotionListener(inputManager);
+
+        inputManager.attachTo(this);
 
         this.pWinLastMousePosition = new Vertex3D(0,0,0);
 
         // .OBJ file reading + construction of the 3D triangle to render
-        this.mesh = Document.readObjFile(Paths.get("obj model\\axis.obj"));
+        this.mesh = Document.readObjFile(Paths.get("obj model\\teapot.obj"));
 
         // Projection matrix coefficient definition initialisation
-        this.camera.matCreateCamProjection(iWinWidth, iWinHeight);
+        this.camera.updateProjectionMatrix(this);
 
         this.timeLoop = new Timer(16, e -> repaint());
         this.generalData = new GeneralData();
-        this.setLayout(null); // on utilise null pour positionner manuellement
+
+        this.pipeline = new Pipeline(mesh, camera);
+
+        this.setLayout(null); // on utilise null pour positioner manuellement
         generalData.setBounds(10, 10, 80, 20); // x, y, largeur, hauteur
         this.add(generalData);
         this.repaint();
@@ -80,7 +77,7 @@ public class Engine3D extends JPanel {
         super.addNotify();
 
         SwingUtilities.invokeLater(() -> {
-            inputManager.centerMouse(this);
+            inputManager.centerMouse();
             timeLoop.start();
             requestFocusInWindow();
         });
@@ -92,7 +89,7 @@ public class Engine3D extends JPanel {
         super.paintComponent(g);
 
         // Real time aspect actualisation
-        camera.matProjectionActualisation(this);
+        camera.updateProjectionMatrix(this);
 
         long now = System.nanoTime();
         elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
@@ -100,117 +97,17 @@ public class Engine3D extends JPanel {
         lastFrameTime = now;
 //        System.out.println(deltaTime);
 
-        // Actualisation of theta
-        this.dtheta += 0.05;
-//        System.out.println(this.theta);
-
-        // ROTATION OF THE OBJECT IN THE WORLD (adding a rotation mat per object in the future)
-        // COMBINATION ROTATION + TRANSLATION
-        Matrix matWorld = Matrix.createWorldTransform(this.dtheta * 0,this.dtheta * 0,0,0,0,16);
-
         inputManager.handleKeyPress();
-        camera.camUpdate();
+        camera.updateCamReferential();
         generalData.calcFpsPerFrame(this);
 
-        // Creation of the camera matrix
-        Matrix matCameraWorld = Matrix.createCamReferential(camera.getpCamPosition(), camera.getvCamDirection(), camera.getvCamUp());
+        // Actualisation of theta
+//        worldRotationAngle += 0.05;
+//        System.out.println(this.theta);
+        pipeline.setWorldRotationAngle(worldRotationAngle);
 
-        // engine.math.Triangle projection and drawing
-        List<Triangle> trisToRaster = new ArrayList<>();
-        for (Triangle triangleToProject : mesh.getMeshTriangle()) {
-
-            // Z-axis, Y-axis and X-axis Rotation
-            Triangle triTransformed = triangleToProject.transformed(matWorld);
-
-            // Casting the ray of the camera
-            Vector3D vCameraRay = triTransformed.getVertices()[0].sub(camera.getpCamPosition());
-
-            // Checking if the ray of the camera is in sight of the normale
-            if (triTransformed.getNormal().dotProduct(vCameraRay) < 0) {
-
-                triTransformed.setLighting(new Vector3D(0,0,-1));
-
-                // Convert World Space in the Worldview of the camera
-                Triangle triViewed = triTransformed.transformed(matCameraWorld);
-
-                Triangle[] trisClipped = new Triangle[2];
-                trisClipped[0] = new Triangle();
-                trisClipped[1] = new Triangle();
-
-                Plane frontClippingPlane = new Plane(new Vertex3D(0,0, 0.1), new Vector3D(0,0,1));
-                int nbClippedTris = frontClippingPlane.clipTriangleAgainstPlane(triViewed, trisClipped[0], trisClipped[1]);
-
-                for (int n = 0; n < nbClippedTris; n++) {
-                    trisClipped[n].projectToScreenInPlace(this.getCamera().getMatProjection(), iWinHeight, iWinWidth);
-
-                    // Save for later rasterization
-                    trisToRaster.add(trisClipped[n]);
-                }
-            }
-        }
-
-        // Painter's algorithm
-        trisToRaster.sort((t1, t2) -> {
-            double dMeanZ1 = (t1.getVertices()[0].getZ() + t1.getVertices()[1].getZ() + t1.getVertices()[2].getZ()) / 3;
-            double dMeanZ2 = (t2.getVertices()[0].getZ() + t2.getVertices()[1].getZ() + t2.getVertices()[2].getZ()) / 3;
-            return Double.compare(dMeanZ2,dMeanZ1);
-        });
-
-        for (Triangle triToClip : trisToRaster) {
-            List<Triangle> clippingQueue = new ArrayList<>();
-            clippingQueue.add(triToClip);
-
-            for (int p = 0; p < 4; p++) {
-                int nbTrisToAdd = 1;
-                List<Triangle> futureTestToClip = new ArrayList<>();
-                for(Triangle test : clippingQueue) {
-                    Triangle[] clipped = new Triangle[2];
-                    clipped[0] = new Triangle();
-                    clipped[1] = new Triangle();
-
-
-                    Plane planeToClip = new Plane();
-                    planeToClip = switch (p) {
-                        case 0 -> new Plane(new Vertex3D(0, 0, 0), new Vector3D(0, 1, 0));
-                        case 1 -> new Plane(new Vertex3D(0, iWinHeight - 1, 0), new Vector3D(0, -1, 0));
-                        case 2 -> new Plane(new Vertex3D(0, 0, 0), new Vector3D(1, 0, 0));
-                        case 3 -> new Plane(new Vertex3D(iWinWidth - 1, 0, 0), new Vector3D(-1, 0, 0));
-                        default -> planeToClip;
-                    };
-                    nbTrisToAdd = planeToClip.clipTriangleAgainstPlane(test, clipped[0], clipped[1]);
-
-                    for (int w = 0; w < nbTrisToAdd; w++) {
-                        Triangle temp = new Triangle(clipped[w]);
-                        futureTestToClip.add(temp);
-                    }
-                }
-                clippingQueue = futureTestToClip;
-
-            }
-
-            for (Triangle triToDraw : clippingQueue) {
-                // Getting back the coordinate to draw the 2D triangle
-                int[] xs = new int[3];
-                int[] ys = new int[3];
-
-                for (int i = 0; i < 3; i++) {
-                    xs[i] = (int) Math.round(triToDraw.getVertices()[i].getX());
-                    ys[i] = (int) Math.round(triToDraw.getVertices()[i].getY());
-                }
-
-                g.setColor(triToDraw.getColor()); // Setting the correct color
-
-                Graphics2D g2 = (Graphics2D) g;
-                g2.fillPolygon(xs, ys, 3);
-                g2.setColor(Color.BLACK);
-                g2.drawPolygon(xs, ys, 3);
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-                //System.out.println(nbTriRender++);
-            }
-        }
-
+        pipeline.pipelineExecution(windowWidth, windowWHeight,g);
     }
-
 
     public static void main(String[] args) {
         JFrame window = new JFrame("3D Engine");
@@ -223,51 +120,26 @@ public class Engine3D extends JPanel {
         window.add(engine3D);
         window.setLocationRelativeTo(null);
         window.setVisible(true);
-
     }
 
-    public Timer getTimeLoop() {
-        return timeLoop;
+    public int getWindowWidth() {
+        return windowWidth;
     }
 
-    public Mesh getMesh() {
-        return mesh;
+    public int getWindowWHeight() {
+        return windowWHeight;
     }
 
-    public void setMesh(Mesh mesh) {
-        this.mesh = mesh;
+    public void setWindowWidth(int windowWidth) {
+        this.windowWidth = windowWidth;
     }
 
-    public int getiWinWidth() {
-        return iWinWidth;
-    }
-
-    public int getiWinHeight() {
-        return iWinHeight;
-    }
-
-    public void setiWinWidth(int iWinWidth) {
-        this.iWinWidth = iWinWidth;
-    }
-
-    public void setiWinHeight(int iWinHeight) {
-        this.iWinHeight = iWinHeight;
-    }
-
-    public double getDtheta() {
-        return dtheta;
+    public void setWindowWHeight(int windowWHeight) {
+        this.windowWHeight = windowWHeight;
     }
 
     public boolean[] getKeysPressed() {
         return keysPressed;
-    }
-
-    public double getdTranslationCameraSpeed() {
-        return dTranslationCameraSpeed;
-    }
-
-    public double getdRotationCameraSpeed() {
-        return dRotationCameraSpeed;
     }
 
     public Vertex3D getpWinLastMousePosition() {
@@ -286,20 +158,8 @@ public class Engine3D extends JPanel {
         this.firstMouseMove = firstMouseMove;
     }
 
-    public long getStartFrameTime() {
-        return startFrameTime;
-    }
-
-    public long getLastFrameTime() {
-        return lastFrameTime;
-    }
-
     public double getDeltaTime() {
         return deltaTime;
-    }
-
-    public double getElapsedTime() {
-        return elapsedTime;
     }
 
     public Camera getCamera() {

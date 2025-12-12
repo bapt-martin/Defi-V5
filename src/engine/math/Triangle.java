@@ -1,5 +1,7 @@
 package engine.math;
 
+import engine.core.Camera;
+
 import java.awt.*;
 import java.util.Arrays;
 
@@ -126,11 +128,22 @@ public class Triangle {
         return this;
     }
 
+    public void applyWorldTransformInPlace(Matrix worldTransformMatrix) {
+        this.transformed(worldTransformMatrix);
+    }
+
+    public boolean isFacing(Camera camera) {
+        // Casting the ray of the camera
+        Vector3D vCameraRay = this.getVertices()[0].sub(camera.getpCamPosition());
+
+        // Checking if the ray of the camera is in sight of the normale
+        return (this.getNormal().dotProduct(vCameraRay) < 0);
+    }
 
     public void updateNormal() {
         Vector3D edge1 = vertices[1].sub(vertices[0]);
         Vector3D edge2 = vertices[2].sub(vertices[0]);
-        normal = edge1.crossProduct(edge2).selfNormalize();
+        normal = edge1.crossProduct(edge2).normalizeInPlace();
     }
 
     public void grayScale(double t) {
@@ -142,7 +155,7 @@ public class Triangle {
     }
 
     public void setLighting(Vector3D lightDirection) {
-        lightDirection.selfNormalize();
+        lightDirection.normalizeInPlace();
 
         double dpLightNorm = this.getNormal().dotProduct(lightDirection);
         this.grayScale(dpLightNorm);
@@ -169,7 +182,13 @@ public class Triangle {
         return this;
     }
 
-
+    public void get2DCoordinates(int[] xs, int[] ys) {
+        for (int i = 0; i < 3; i++) {
+            Vertex3D[] vert = this.getVertices();
+            xs[i] = (int) Math.round(vert[i].getX());
+            ys[i] = (int) Math.round(vert[i].getY());
+        }
+    }
 
     public Vertex3D[] getVertices() {
         return vertices;

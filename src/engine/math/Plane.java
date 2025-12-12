@@ -1,6 +1,7 @@
 package engine.math;
 
 import java.awt.*;
+import java.util.List;
 
 public class Plane {
     private Vertex3D origin;
@@ -20,11 +21,21 @@ public class Plane {
         this(other.origin, other.normal);
     }
 
-    public int clipTriangleAgainstPlane(Triangle triIn, Triangle triOut1, Triangle triOut2) {
+    public static Plane planeToClipAgainst(int borderNumber, int iWinWidth, int iWinHeight) {
+        return switch (borderNumber) {
+            case 0 -> new Plane(new Vertex3D(0, 0, 0), new Vector3D(0, 1, 0));
+            case 1 -> new Plane(new Vertex3D(0, iWinHeight - 1, 0), new Vector3D(0, -1, 0));
+            case 2 -> new Plane(new Vertex3D(0, 0, 0), new Vector3D(1, 0, 0));
+            case 3 -> new Plane(new Vertex3D(iWinWidth - 1, 0, 0), new Vector3D(-1, 0, 0));
+            default -> new Plane();
+        };
+    }
+
+    public int clipTriangleAgainstPlane(Triangle triIn, List<Triangle> trisOut) {
         Vertex3D planePoint = this.getOrigin();
         Vector3D planeNorm = this.getNormal();
 
-        planeNorm.selfNormalize();
+        planeNorm.normalizeInPlace();
 
         Vertex3D[] ptsInside  = new Vertex3D[3]; int nbPointsInside = 0;
         Vertex3D[] ptsOutside = new Vertex3D[3]; int nbPointsOutside = 0;
@@ -43,7 +54,7 @@ public class Plane {
 
         if (nbPointsInside == 3) {
             // All points are inside the plane
-            triOut1.copyFrom(triIn);
+            trisOut.add(triIn);
             return 1;
         }
         if (nbPointsInside == 1) {
@@ -54,8 +65,8 @@ public class Plane {
             vertsOut1[1] = this.intersectSegmentWithPlane(ptsInside[0],ptsOutside[0]);
             vertsOut1[2] = this.intersectSegmentWithPlane(ptsInside[0],ptsOutside[1]);
 
-            triOut1.copyFrom(new Triangle(vertsOut1, triIn.getColor()));
-            triOut1.setColor(Color.RED);
+//            trisOut.add(new Triangle(vertsOut1, triIn.getColor()));
+            trisOut.add(new Triangle(vertsOut1, Color.RED));
 
             return 1;
         }
@@ -71,10 +82,10 @@ public class Plane {
             vertsOut2[1] = this.intersectSegmentWithPlane(ptsInside[0],ptsOutside[0]);; // dans mon livre faut inverser les 2
             vertsOut2[2] = this.intersectSegmentWithPlane(ptsInside[1],ptsOutside[0]);
 
-            triOut1.copyFrom(new Triangle(vertsOut1, triIn.getColor()));
-            triOut2.copyFrom(new Triangle(vertsOut2, triIn.getColor()));
-            triOut1.setColor(Color.GREEN);
-            triOut2.setColor(Color.BLUE);
+            trisOut.add(new Triangle(vertsOut1, triIn.getColor()));
+            trisOut.add(new Triangle(vertsOut2, triIn.getColor()));
+            trisOut.add(new Triangle(vertsOut1, Color.BLUE));
+            trisOut.add(new Triangle(vertsOut2, Color.GREEN));
 
             return 2;
         }
@@ -87,7 +98,7 @@ public class Plane {
         Vertex3D vertPlanePoint = this.getOrigin();
         Vector3D vectPlaneNorm = this.getNormal();
 
-        vectPlaneNorm.selfNormalize();
+        vectPlaneNorm.normalizeInPlace();
 
         return vectPlaneNorm.dotProduct(pPoint) - vertPlanePoint.dotProduct(vectPlaneNorm);
     }
@@ -97,7 +108,7 @@ public class Plane {
         Vertex3D vertPlanePoint = this.getOrigin();
         Vector3D vectPlaneNorm = this.getNormal();
 
-        vectPlaneNorm.selfNormalize();
+        vectPlaneNorm.normalizeInPlace();
 
         double dPlaneConstant = -vectPlaneNorm.dotProduct(vertPlanePoint);
         double ad = pLineStart.dotProduct(vectPlaneNorm);

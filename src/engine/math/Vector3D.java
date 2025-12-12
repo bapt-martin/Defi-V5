@@ -18,7 +18,7 @@ public class Vector3D extends Tuple3D{
         return new Vector3D(super.crossProduct(tupleIn2));
     }
 
-    public Vector3D selfNormalize() {
+    public Vector3D normalizeInPlace() {
         if (this.getLength() != 0) {
             double vectorLength = this.getLength();
 
@@ -28,6 +28,8 @@ public class Vector3D extends Tuple3D{
         }
         return this;
     }
+
+
 
     public Vector3D normalized() {
         if (this.getLength() != 0) {

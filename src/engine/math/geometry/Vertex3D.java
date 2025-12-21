@@ -1,10 +1,14 @@
-package engine.math;
+package engine.math.geometry;
 
-import engine.core.Camera;
+import engine.math.tools.Matrix;
+import engine.math.tools.Tuple3D;
+import engine.math.tools.Vector3D;
 
-public class Vertex3D extends Tuple3D{
+import java.awt.*;
+
+public class Vertex3D extends Tuple3D {
     public Vertex3D() {
-        super();
+        super(0,0,0,1);
     }
 
     public Vertex3D(double x, double y, double z) {
@@ -15,9 +19,13 @@ public class Vertex3D extends Tuple3D{
         super(tuple3D);
     }
 
+    public Vertex3D(Point point) {
+        super(point.x,point.y,0,1);
+    }
+
     @Override
-    public Vertex3D crossProduct(Tuple3D tupleIn2) {
-        return new Vertex3D(super.crossProduct(tupleIn2));
+    public Vertex3D crossProduct(Tuple3D other) {
+        return new Vertex3D(super.crossProduct(other));
     }
 
     @Override
@@ -61,13 +69,13 @@ public class Vertex3D extends Tuple3D{
 
 
     @Override
-    public Vertex3D add(Tuple3D tupleIn2) {
-        return new Vertex3D(super.add(tupleIn2));
+    public Vertex3D add(Tuple3D other) {
+        return new Vertex3D(super.add(other));
     }
 
     @Override
-    public Vector3D sub(Tuple3D tupleIn2) {
-        return new Vector3D(super.sub(tupleIn2));
+    public Vector3D sub(Tuple3D other) {
+        return new Vector3D(super.sub(other));
     }
 
     @Override
@@ -83,7 +91,7 @@ public class Vertex3D extends Tuple3D{
 
     @Override
     public String toString() {
-        return "engine.math.Vertex3D{" +
+        return "engine.math.geometry.Vertex3D{" +
                 "x=" + x +
                 ", y=" + y +
                 ", z=" + z +

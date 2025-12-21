@@ -1,13 +1,17 @@
 package engine.renderer;
 
-import engine.core.Camera;
-import engine.math.*;
+import engine.math.geometry.Mesh;
+import engine.math.geometry.Plane;
+import engine.math.geometry.Triangle;
+import engine.math.geometry.Vertex3D;
+import engine.math.tools.Matrix;
+import engine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static engine.math.Plane.planeToClipAgainst;
+import static engine.math.geometry.Plane.planeToClipAgainst;
 
 public class Pipeline {
     private Matrix viewMatrix;
@@ -25,10 +29,8 @@ public class Pipeline {
         this.updateWorldTransformMatrix();
     }
 
-
-
     public void updateViewMatrix() {
-        this.viewMatrix = Matrix.createViewMatrix(this.camera.getpCamPosition(), this.camera.getvCamDirection(), this.camera.getvCamUp());
+        this.viewMatrix = Matrix.createViewMatrix(this.camera.getCameraPosition(), this.camera.getCameraDirection(), this.camera.getCameraUp());
     }
 
     public void updateWorldTransformMatrix() {

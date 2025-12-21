@@ -1,7 +1,7 @@
 package engine.io;
 
-import engine.math.Mesh;
-import engine.math.Vertex3D;
+import engine.math.geometry.Mesh;
+import engine.math.geometry.Vertex3D;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-public abstract class Document {
+public abstract class ObjLoader {
 
     public static boolean isFileOpen(Path path) {
         try (var channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
@@ -28,37 +28,35 @@ public abstract class Document {
     public static Mesh readObjFile(Path path) {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             String line;
-
             List<Vertex3D> vertices = new ArrayList<>();
             List<int[]> indicesFaces = new ArrayList<>();
 
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty()) continue; // Ignore empty lines
+                if (!line.isEmpty()) {
+                    char firstCharacter = line.charAt(0);
+                    if (firstCharacter == 'v' || firstCharacter == 'f');
 
-                char firstCharacter = line.charAt(0);
+                    Scanner scan = new Scanner(line).useLocale(Locale.US);
+                    scan.next();
+                    switch (firstCharacter) {
+                        case 'v' -> {
+                            float x = scan.nextFloat();
+                            float y = scan.nextFloat();
+                            float z = scan.nextFloat();
 
-                if (firstCharacter != 'v' && firstCharacter != 'f') continue;
+                            vertices.add(new Vertex3D(x, y, z));
+                        }
+                        case 'f' -> {
+                            int i1 = scan.nextInt()-1;
+                            int i2 = scan.nextInt()-1;
+                            int i3 = scan.nextInt()-1;
 
-                Scanner scan = new Scanner(line).useLocale(Locale.US);
-                scan.next();
-                switch (firstCharacter) {
-                    case 'v' -> {
-                        float x = scan.nextFloat();
-                        float y = scan.nextFloat();
-                        float z = scan.nextFloat();
-
-                        vertices.add(new Vertex3D(x, y, z));
-                    }
-                    case 'f' -> {
-                        int i1 = scan.nextInt()-1;
-                        int i2 = scan.nextInt()-1;
-                        int i3 = scan.nextInt()-1;
-
-                        indicesFaces.add(new int[]{i1,i2,i3});
-                    }
-                    default -> {
-                        // nothing ignore other lines
+                            indicesFaces.add(new int[]{i1,i2,i3});
+                        }
+                        default -> {
+                            // nothing ignore other lines
+                        }
                     }
                 }
             }
@@ -66,6 +64,7 @@ public abstract class Document {
             mesh.triConstruct();
 
             return mesh;
+
         } catch (IOException e) {
             e.printStackTrace();
             return new Mesh();

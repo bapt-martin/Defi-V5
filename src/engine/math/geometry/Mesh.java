@@ -1,7 +1,4 @@
-package engine.math;
-
-import engine.core.Camera;
-import engine.core.Engine3D;
+package engine.math.geometry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +41,7 @@ public class Mesh {
             Vertex3D vert2 = vertices.get(face[1]);
             Vertex3D vert3 = vertices.get(face[2]);
 
-            Triangle triBuilt = new Triangle(vert1, vert2, vert3);
-            meshTriangle.add(triBuilt);
+            meshTriangle.add(new Triangle(vert1, vert2, vert3));
         }
 
         this.meshTriangle = meshTriangle;

@@ -5,10 +5,10 @@ import engine.core.Engine3D;
 import javax.swing.*;
 import java.awt.*;
 
-public class GeneralData extends JPanel {
+public class headUpDisplay extends JPanel {
     private final JLabel fpsLabel;
 
-    public GeneralData() {
+    public headUpDisplay() {
         this.fpsLabel = new JLabel("FPS: 0");
         fpsLabel.setForeground(Color.WHITE);
         fpsLabel.setBackground(Color.BLACK);

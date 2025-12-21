@@ -1,32 +1,31 @@
 package engine.core;
 
 import engine.input.InputManager;
-import engine.io.Document;
-import engine.math.*;
-import engine.overlay.GeneralData;
+import engine.io.ObjLoader;
+import engine.math.geometry.Mesh;
+import engine.math.geometry.Triangle;
+import engine.overlay.headUpDisplay;
+import engine.renderer.Camera;
 import engine.renderer.Pipeline;
 
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class Engine3D extends JPanel {
-    private Mesh mesh;
-    private Camera camera;
-    private InputManager inputManager;
-    private GeneralData generalData;
-    private Pipeline pipeline;
+    private final Mesh mesh;
+    private final Camera camera;
+    private final InputManager inputManager;
+    private final headUpDisplay headUpDisplay;
+    private final Pipeline pipeline;
+    private Scene scene;
+    private List<Triangle> geometry;
 
     private int windowWidth = 0;
     private int windowWHeight = 0;
 
     private double worldRotationAngle;
-
-    private final boolean[] keysPressed = new boolean[256]; //move to imput manager
-
-    private Vertex3D pWinLastMousePosition;// To input manager?
-    private final double mouseSensibility = 0.01;// To input manager?
-    private boolean firstMouseMove = true;// To input manager?
 
     private final Timer timeLoop; //generale data?
     private long startFrameTime = System.nanoTime(); //generale data?
@@ -53,22 +52,20 @@ public class Engine3D extends JPanel {
 
         inputManager.attachTo(this);
 
-        this.pWinLastMousePosition = new Vertex3D(0,0,0);
-
         // .OBJ file reading + construction of the 3D triangle to render
-        this.mesh = Document.readObjFile(Paths.get("obj model\\teapot.obj"));
+        this.mesh = ObjLoader.readObjFile(Paths.get("obj model\\teapot.obj"));
 
         // Projection matrix coefficient definition initialisation
-        this.camera.updateProjectionMatrix(this);
+        this.camera.updateWindowProjectionMatrix(this);
 
         this.timeLoop = new Timer(16, e -> repaint());
-        this.generalData = new GeneralData();
+        this.headUpDisplay = new headUpDisplay();
 
         this.pipeline = new Pipeline(mesh, camera);
 
         this.setLayout(null); // on utilise null pour positioner manuellement
-        generalData.setBounds(10, 10, 80, 20); // x, y, largeur, hauteur
-        this.add(generalData);
+        headUpDisplay.setBounds(10, 10, 80, 20); // x, y, largeur, hauteur
+        this.add(headUpDisplay);
         this.repaint();
     }
 
@@ -89,7 +86,7 @@ public class Engine3D extends JPanel {
         super.paintComponent(g);
 
         // Real time aspect actualisation
-        camera.updateProjectionMatrix(this);
+        camera.updateWindowProjectionMatrix(this);
 
         long now = System.nanoTime();
         elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
@@ -98,8 +95,10 @@ public class Engine3D extends JPanel {
 //        System.out.println(deltaTime);
 
         inputManager.handleKeyPress();
+//        inputManager.handleMouseWheelInput();
         camera.updateCamReferential();
-        generalData.calcFpsPerFrame(this);
+        camera.updateProjectionMatrix(this);
+        headUpDisplay.calcFpsPerFrame(this);
 
         // Actualisation of theta
 //        worldRotationAngle += 0.05;
@@ -138,32 +137,8 @@ public class Engine3D extends JPanel {
         this.windowWHeight = windowWHeight;
     }
 
-    public boolean[] getKeysPressed() {
-        return keysPressed;
-    }
-
-    public Vertex3D getpWinLastMousePosition() {
-        return pWinLastMousePosition;
-    }
-
-    public double getMouseSensibility() {
-        return mouseSensibility;
-    }
-
-    public boolean isFirstMouseMove() {
-        return firstMouseMove;
-    }
-
-    public void setFirstMouseMove(boolean firstMouseMove) {
-        this.firstMouseMove = firstMouseMove;
-    }
-
     public double getDeltaTime() {
         return deltaTime;
-    }
-
-    public Camera getCamera() {
-        return camera;
     }
 
     public int getNbFrames() {

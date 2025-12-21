@@ -1,4 +1,4 @@
-package engine.core;
+package game.test;
 
 import java.awt.*;
 

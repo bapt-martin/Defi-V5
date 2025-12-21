@@ -1,9 +1,9 @@
-package engine.math;
+package engine.math.tools;
 
 import static java.lang.Math.sqrt;
 
 public class Tuple3D {
-    double x, y, z, w;
+    public double x, y, z, w;
 
     public Tuple3D(double x, double y, double z) {
         this.x = x;
@@ -80,30 +80,30 @@ public class Tuple3D {
         return this;
     }
 
-    public Tuple3D crossProduct(Tuple3D tupleIn2) {
-        double x = this.y * tupleIn2.z - this.z * tupleIn2.y;
-        double y = this.z * tupleIn2.x - this.x * tupleIn2.z;
-        double z = this.x * tupleIn2.y - this.y * tupleIn2.x;
+    public Tuple3D crossProduct(Tuple3D other) {
+        double x = this.y * other.z - this.z * other.y;
+        double y = this.z * other.x - this.x * other.z;
+        double z = this.x * other.y - this.y * other.x;
 
         return new Tuple3D(x, y, z);
     }
 
-    public double dotProduct(Tuple3D tupleIn2) {
-        return this.x * tupleIn2.x +
-               this.y * tupleIn2.y +
-               this.z * tupleIn2.z;
+    public double dotProduct(Tuple3D other) {
+        return this.x * other.x +
+               this.y * other.y +
+               this.z * other.z;
     }
 
-    public Tuple3D sub(Tuple3D tupleIn2) {
-        return new Tuple3D(this.x - tupleIn2.x,
-                           this.y - tupleIn2.y,
-                           this.z - tupleIn2.z);
+    public Tuple3D sub(Tuple3D other) {
+        return new Tuple3D(this.x - other.x,
+                           this.y - other.y,
+                           this.z - other.z);
     }
 
-    public Tuple3D add(Tuple3D tupleIn2) {
-        return new Tuple3D(this.x + tupleIn2.x,
-                           this.y + tupleIn2.y,
-                           this.z + tupleIn2.z);
+    public Tuple3D add(Tuple3D other) {
+        return new Tuple3D(this.x + other.x,
+                           this.y + other.y,
+                           this.z + other.z);
     }
 
     public Tuple3D transformed(Matrix mat) {

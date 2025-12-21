@@ -1,14 +1,15 @@
-package engine.core;
+package engine.renderer;
 
-import engine.math.Matrix;
-import engine.math.Vector3D;
-import engine.math.Vertex3D;
+import engine.core.Engine3D;
+import engine.math.tools.Matrix;
+import engine.math.tools.Vector3D;
+import engine.math.geometry.Vertex3D;
 
 public class Camera {
-    private Vertex3D pCamPosition;
-    private Vector3D vCamDirection;
-    private Vector3D vCamUp;
-    private Vector3D vCamRight;
+    private Vertex3D cameraPosition;
+    private Vector3D cameraDirection;
+    private Vector3D cameraUp;
+    private Vector3D cameraRight;
 
     private double camPitch;
     private double camYaw;
@@ -22,17 +23,22 @@ public class Camera {
     private double dTranslationCameraSpeed = 10;
     private double dRotationCameraSpeed = 0.5;
 
+    private double zoom;
+    private double zoomFactor;
+
     public Camera() {
-        this.pCamPosition = new Vertex3D(0, 0, 1);
-        this.vCamDirection = new Vector3D(0, 0, 1);
-        this.vCamUp        = new Vector3D(0, 1, 0);
-        this.vCamRight     = new Vector3D(1, 0, 0);
+        this.cameraPosition = new Vertex3D(0, 0, 1);
+        this.cameraDirection = new Vector3D(0, 0, 1);
+        this.cameraUp = new Vector3D(0, 1, 0);
+        this.cameraRight = new Vector3D(1, 0, 0);
         this.camPitch = 0;
         this.camYaw = 0;
         this.camRoll = 0;
         this.near = 0.1;
         this.far = 1000;
         this.fov = 90;
+        this.zoom = 1;
+        this.zoomFactor = 0.1;
     }
 
     public Camera(double near, double far, double fov) {
@@ -43,11 +49,11 @@ public class Camera {
 
     }
 
-    public Camera(Vertex3D pCamPosition, Vector3D vCamDirection, Vector3D vCamUp, Vector3D vCamRight, double camPitch, double camYaw, double camRoll, Matrix projectionMatrix, double near, double far, double fov) {
-        this.pCamPosition  = new Vertex3D(pCamPosition);
-        this.vCamDirection = new Vector3D(vCamDirection);
-        this.vCamUp        = new Vector3D(vCamUp);
-        this.vCamRight     = new Vector3D(vCamRight);
+    public Camera(Vertex3D cameraPosition, Vector3D cameraDirection, Vector3D cameraUp, Vector3D cameraRight, double camPitch, double camYaw, double camRoll, Matrix projectionMatrix, double near, double far, double fov) {
+        this.cameraPosition = new Vertex3D(cameraPosition);
+        this.cameraDirection = new Vector3D(cameraDirection);
+        this.cameraUp = new Vector3D(cameraUp);
+        this.cameraRight = new Vector3D(cameraRight);
         this.camPitch = camPitch;
         this.camYaw = camYaw;
         this.camRoll = camRoll;
@@ -57,13 +63,20 @@ public class Camera {
         this.fov = fov;
     }
 
-    public void updateProjectionMatrix(Engine3D engine3D) {
+    public void updateWindowProjectionMatrix(Engine3D engine3D) {
         if (engine3D.getWidth() != engine3D.getWindowWidth() || engine3D.getHeight() != engine3D.getWindowWHeight()) {
             engine3D.setWindowWidth(engine3D.getWidth());
             engine3D.setWindowWHeight(engine3D.getHeight());
 
-            this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight());
+            this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight(), zoom);
         }
+    }
+
+    public void updateProjectionMatrix(Engine3D engine3D) {
+        engine3D.setWindowWidth(engine3D.getWidth());
+        engine3D.setWindowWHeight(engine3D.getHeight());
+
+        this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight(), zoom);
     }
 
     public void updateCamReferential() {
@@ -81,35 +94,35 @@ public class Camera {
         Matrix matCameraRotRoll = Matrix.createRotationAroundAxis(camRoll,localAxes[0]);
         matCameraRotRoll.rotateBasisInPlace(localAxes);
 
-        vCamDirection = localAxes[0];
-        vCamUp        = localAxes[1];
-        vCamRight     = localAxes[2];
+        cameraDirection = localAxes[0];
+        cameraUp = localAxes[1];
+        cameraRight = localAxes[2];
     }
 
     public void translateCameraInPlace(Vector3D translationDirection, int sens, double translationSpeed, double deltaFrameTime) {
         translationDirection.scaleInPlace(sens * deltaFrameTime * translationSpeed);
-        this.pCamPosition.translateInPlace(translationDirection);
+        this.cameraPosition.translateInPlace(translationDirection);
     }
 
     public double rotateCameraInPlace(double currentRotationValue, double rotationSpeed, double deltaFrameTime) {
         return currentRotationValue + rotationSpeed * deltaFrameTime;
     }
 
-    public Vertex3D getpCamPosition() {
-        return pCamPosition;
+    public Vertex3D getCameraPosition() {
+        return cameraPosition;
     }
 
 
-    public Vector3D getvCamDirection() {
-        return vCamDirection;
+    public Vector3D getCameraDirection() {
+        return cameraDirection;
     }
 
-    public Vector3D getvCamUp() {
-        return vCamUp;
+    public Vector3D getCameraUp() {
+        return cameraUp;
     }
 
-    public Vector3D getvCamRight() {
-        return vCamRight;
+    public Vector3D getCameraRight() {
+        return cameraRight;
     }
 
     public double getCamPitch() {
@@ -146,6 +159,22 @@ public class Camera {
 
     public double getdRotationCameraSpeed() {
         return dRotationCameraSpeed;
+    }
+
+    public double getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(double zoom) {
+        this.zoom = zoom;
+    }
+
+    public double getZoomFactor() {
+        return zoomFactor;
+    }
+
+    public void setZoomFactor(double zoomFactor) {
+        this.zoomFactor = zoomFactor;
     }
 }
 

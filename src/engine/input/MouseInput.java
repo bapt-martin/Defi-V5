@@ -4,8 +4,10 @@ import engine.core.Engine3D;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
-public class MouseInput implements MouseListener {
+public class MouseInput implements MouseListener, MouseWheelListener {
     private Engine3D engine3D;
     private InputManager inputManager;
 
@@ -43,5 +45,11 @@ public class MouseInput implements MouseListener {
     public void mouseExited(MouseEvent e) {
         System.out.println(e.getX() +" : "+ e.getY());
         engine3D.requestFocusInWindow();
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        inputManager.handleMouseWheelInput(e);
+//        System.out.printf("\n" + e.getWheelRotation());
     }
 }

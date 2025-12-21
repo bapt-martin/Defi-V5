@@ -1,4 +1,6 @@
-package engine.math;
+package engine.math.tools;
+import engine.math.geometry.Vertex3D;
+
 import static java.lang.Math.*;
 
 public class Matrix {
@@ -10,7 +12,7 @@ public class Matrix {
     }
 
     public Matrix() {
-        this(new Matrix(4,4));
+        this.matrix = new double[4][4];
     }
 
     public Matrix(double[][] matrix) {
@@ -41,10 +43,10 @@ public class Matrix {
         }
     }
 
-    public static Matrix createProjectionMatrix(double far, double near, double fov, int width, int height) {
+    public static Matrix createProjectionMatrix(double far, double near, double fov, int width, int height, double zoom) {
         double q = far / (far - near);
         double aspectRatio = (double) width / height;
-        double scalingFactorRad = 1 / tan(fov * 0.5 / 180 * Math.PI);
+        double scalingFactorRad = zoom / tan(fov * 0.5 / 180 * Math.PI);
 
         double[][] matProj = new double[4][4];
         matProj[0][0] = aspectRatio * scalingFactorRad;
@@ -75,10 +77,8 @@ public class Matrix {
     }
 
     public static Matrix createViewMatrix(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
-        Vertex3D pTranslatedTarget = pTargetPosition.translated(vTargetDirection);
-
         //New forward direction
-        Vector3D vNewForward = pTranslatedTarget.sub(pTargetPosition);
+        Vector3D vNewForward = new Vector3D(vTargetDirection);
         vNewForward.normalizeInPlace();
 
         //New up direction
@@ -201,11 +201,12 @@ public class Matrix {
         double[][] matResult = new double[4][4];
 
         for (int i = 0; i < 4; i++) {
+            double[] row = mat1[i];
             for (int j = 0; j < 4; j++) {
-                matResult[i][j] = mat1[i][0] * mat2[0][j]
-                                + mat1[i][1] * mat2[1][j]
-                                + mat1[i][2] * mat2[2][j]
-                                + mat1[i][3] * mat2[3][j];
+                matResult[i][j] = row[0] * mat2[0][j]
+                                + row[1] * mat2[1][j]
+                                + row[2] * mat2[2][j]
+                                + row[3] * mat2[3][j];
             }
         }
 

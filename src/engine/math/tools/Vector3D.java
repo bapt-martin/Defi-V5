@@ -1,8 +1,8 @@
-package engine.math;
+package engine.math.tools;
 
 public class Vector3D extends Tuple3D{
     public Vector3D() {
-        super();
+        super(0,0,0,0);
     }
 
     public Vector3D(double x, double y, double z) {
@@ -14,33 +14,29 @@ public class Vector3D extends Tuple3D{
     }
 
     @Override
-    public Vector3D crossProduct(Tuple3D tupleIn2) {
-        return new Vector3D(super.crossProduct(tupleIn2));
+    public Vector3D crossProduct(Tuple3D other) {
+        return new Vector3D(super.crossProduct(other));
     }
 
     public Vector3D normalizeInPlace() {
         if (this.getLength() != 0) {
-            double vectorLength = this.getLength();
+            double length = this.getLength();
 
-            this.setX(this.getX() / vectorLength);
-            this.setY(this.getY() / vectorLength);
-            this.setZ(this.getZ() / vectorLength);
+            double invLen = 1.0 / length;
+            this.x *= invLen;
+            this.y *= invLen;
+            this.z *= invLen;
         }
         return this;
     }
 
-
-
     public Vector3D normalized() {
-        if (this.getLength() != 0) {
-            double vectorLength = this.getLength();
-
-            double x = this.getX() / vectorLength;
-            double y = this.getY() / vectorLength;
-            double z = this.getZ() / vectorLength;
+        double length = this.getLength();
+        if (length == 0) {
+            return new Vector3D(0, 0, 0);
         }
-
-        return new Vector3D(x,y,z);
+        double invLen = 1.0 / length;
+        return new Vector3D(this.x * invLen, this.y * invLen, this.z * invLen);
     }
 
     @Override
@@ -66,13 +62,13 @@ public class Vector3D extends Tuple3D{
     }
 
     @Override
-    public Vector3D sub(Tuple3D tupleIn2) {
-        return new Vector3D(super.sub(tupleIn2));
+    public Vector3D add(Tuple3D other) {
+        return new Vector3D(this.x + other.x, this.y + other.y, this.z + other.z);
     }
 
     @Override
-    public Vector3D add(Tuple3D tupleIn2) {
-        return new Vector3D(super.add(tupleIn2));
+    public Vector3D sub(Tuple3D other) {
+        return new Vector3D(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     @Override

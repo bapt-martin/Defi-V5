@@ -1,6 +1,8 @@
-package engine.math;
+package engine.math.geometry;
 
-import engine.core.Camera;
+import engine.renderer.Camera;
+import engine.math.tools.Matrix;
+import engine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -113,14 +115,14 @@ public class Triangle {
         this.translateInPlace(vOffsetView);
 
         // Scaling to screen dimension
-        this.scaleInPlaceX(0.5 * iWinHeight);
-        this.scaleInPlaceY(0.5 * iWinWidth);
+        this.scaleInPlaceX(0.5 * iWinWidth);
+        this.scaleInPlaceY(0.5 * iWinHeight);
 
         return this;
     }
 
 
-    public Triangle projectToScreenInPlace(Matrix projectionMatrix, int iWinHeight, int iWinWidth) {
+    public Triangle projectToScreenInPlace(Matrix projectionMatrix, int iWinWidth, int iWinHeight) {
         this.transformInPlace(projectionMatrix);
         this.homogeneousDivisionInPlace();
         this.convertToWindowSpace(iWinWidth, iWinHeight);
@@ -134,7 +136,7 @@ public class Triangle {
 
     public boolean isFacing(Camera camera) {
         // Casting the ray of the camera
-        Vector3D vCameraRay = this.getVertices()[0].sub(camera.getpCamPosition());
+        Vector3D vCameraRay = this.getVertices()[0].sub(camera.getCameraPosition());
 
         // Checking if the ray of the camera is in sight of the normale
         return (this.getNormal().dotProduct(vCameraRay) < 0);
@@ -205,7 +207,7 @@ public class Triangle {
 
     @Override
     public String toString() {
-        return "engine.math.Triangle{" +
+        return "engine.math.geometry.Triangle{" +
                 "vertices=" + Arrays.toString(vertices) +
                 '}';
     }

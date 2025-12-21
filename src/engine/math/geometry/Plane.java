@@ -1,4 +1,6 @@
-package engine.math;
+package engine.math.geometry;
+
+import engine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.List;
@@ -10,6 +12,7 @@ public class Plane {
     public Plane(Vertex3D origin, Vector3D normal) {
         this.origin = origin;
         this.normal = normal;
+        this.normal.normalizeInPlace();
     }
 
     public Plane() {
@@ -32,11 +35,6 @@ public class Plane {
     }
 
     public int clipTriangleAgainstPlane(Triangle triIn, List<Triangle> trisOut) {
-        Vertex3D planePoint = this.getOrigin();
-        Vector3D planeNorm = this.getNormal();
-
-        planeNorm.normalizeInPlace();
-
         Vertex3D[] ptsInside  = new Vertex3D[3]; int nbPointsInside = 0;
         Vertex3D[] ptsOutside = new Vertex3D[3]; int nbPointsOutside = 0;
 
@@ -82,8 +80,8 @@ public class Plane {
             vertsOut2[1] = this.intersectSegmentWithPlane(ptsInside[0],ptsOutside[0]);; // dans mon livre faut inverser les 2
             vertsOut2[2] = this.intersectSegmentWithPlane(ptsInside[1],ptsOutside[0]);
 
-            trisOut.add(new Triangle(vertsOut1, triIn.getColor()));
-            trisOut.add(new Triangle(vertsOut2, triIn.getColor()));
+//            trisOut.add(new Triangle(vertsOut1, triIn.getColor()));
+//            trisOut.add(new Triangle(vertsOut2, triIn.getColor()));
             trisOut.add(new Triangle(vertsOut1, Color.BLUE));
             trisOut.add(new Triangle(vertsOut2, Color.GREEN));
 
@@ -98,8 +96,6 @@ public class Plane {
         Vertex3D vertPlanePoint = this.getOrigin();
         Vector3D vectPlaneNorm = this.getNormal();
 
-        vectPlaneNorm.normalizeInPlace();
-
         return vectPlaneNorm.dotProduct(pPoint) - vertPlanePoint.dotProduct(vectPlaneNorm);
     }
 
@@ -107,8 +103,6 @@ public class Plane {
     public Vertex3D intersectSegmentWithPlane(Vertex3D pLineStart, Vertex3D pLineEnd) {
         Vertex3D vertPlanePoint = this.getOrigin();
         Vector3D vectPlaneNorm = this.getNormal();
-
-        vectPlaneNorm.normalizeInPlace();
 
         double dPlaneConstant = -vectPlaneNorm.dotProduct(vertPlanePoint);
         double ad = pLineStart.dotProduct(vectPlaneNorm);
@@ -126,15 +120,7 @@ public class Plane {
         return origin;
     }
 
-    public void setOrigin(Vertex3D origin) {
-        this.origin = origin;
-    }
-
     public Vector3D getNormal() {
         return normal;
-    }
-
-    public void setNormal(Vector3D normal) {
-        this.normal = normal;
     }
 }

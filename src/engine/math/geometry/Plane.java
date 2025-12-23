@@ -40,7 +40,7 @@ public class Plane {
 
         Vertex3D[] vertsIn = triIn.getVertices();
 
-        // Classification of the point
+        // Vertex classification
         for (int i = 0; i < 3; i++) {
             double dDistPoint = this.signedDistanceToPoint(triIn.getVertices()[i]);
             if (dDistPoint >= 0) {

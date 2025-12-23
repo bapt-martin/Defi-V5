@@ -1,28 +1,51 @@
 package engine.core;
 
+import engine.io.ObjLoader;
 import engine.math.geometry.Mesh;
+import engine.math.geometry.Triangle;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Scene {
-    private List meshList;
-    private Engine3D engine3D;
+    private List<Mesh> meshList;
+    private List<Triangle> triangleList;
 
-    public Scene(Engine3D engine3D) {
+    public Scene(String[] meshesPath, String[] meshesName) {
+        int size = meshesPath.length;
         this.meshList = new ArrayList<>();
-        this.engine3D = engine3D;
+        for (int i=0; i<size; i++) {
+            this.addMesh(ObjLoader.readObjFile(Paths.get(meshesPath[i])), meshesName[i]);
+        }
     }
 
-    public void addMesh(Mesh mesh) {
+    public void addMesh(Mesh mesh, String meshName) {
+        mesh.setMeshName(meshName);
         this.meshList.add(mesh);
     }
 
-    public List getMeshList() {
+    public void initiateTriangleList() {
+        List<Triangle> sceneTriangleList = new ArrayList<>();
+        List<Mesh> meshList = this.getMeshList();
+
+        for (Mesh mesh : meshList) {
+            List<Triangle> meshTriangleList = mesh.getMeshTriangle();
+            sceneTriangleList.addAll(meshTriangleList);
+        }
+
+        this.triangleList = sceneTriangleList;
+    }
+
+    public List<Triangle> getTriangleList() {
+        return triangleList;
+    }
+
+    public List<Mesh> getMeshList() {
         return meshList;
     }
 
-    public void setMeshList(List meshList) {
+    public void setMeshList(List<Mesh> meshList) {
         this.meshList = meshList;
     }
 }

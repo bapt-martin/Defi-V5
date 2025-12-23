@@ -115,8 +115,8 @@ public class Triangle {
         this.translateInPlace(vOffsetView);
 
         // Scaling to screen dimension
-        this.scaleInPlaceX(0.5 * iWinWidth);
-        this.scaleInPlaceY(0.5 * iWinHeight);
+        this.scaleInPlaceX(0.5 * iWinHeight);
+        this.scaleInPlaceY(0.5 * iWinWidth);
 
         return this;
     }

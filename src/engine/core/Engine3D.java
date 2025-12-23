@@ -1,26 +1,19 @@
 package engine.core;
 
 import engine.input.InputManager;
-import engine.io.ObjLoader;
-import engine.math.geometry.Mesh;
-import engine.math.geometry.Triangle;
-import engine.overlay.headUpDisplay;
+import engine.overlay.HeadUpDisplay;
 import engine.renderer.Camera;
 import engine.renderer.Pipeline;
 
 import javax.swing.*;
 import java.awt.*;
-import java.nio.file.Paths;
-import java.util.List;
 
 public class Engine3D extends JPanel {
-    private final Mesh mesh;
     private final Camera camera;
     private final InputManager inputManager;
-    private final headUpDisplay headUpDisplay;
+    private final HeadUpDisplay headUpDisplay;
     private final Pipeline pipeline;
-    private Scene scene;
-    private List<Triangle> geometry;
+    private final Scene scene;
 
     private int windowWidth = 0;
     private int windowWHeight = 0;
@@ -30,14 +23,15 @@ public class Engine3D extends JPanel {
     private final Timer timeLoop; //generale data?
     private long startFrameTime = System.nanoTime(); //generale data?
     private long lastFrameTime = System.nanoTime(); //generale data?
-    private long lastFPSTime = System.nanoTime(); //generale data?
-    private double deltaTime = 0; //generale data?
+    private double lastFrameDuration = 0; //generale data?
     private double elapsedTime; //generale data?
     private int nbFrames; //generale data?
+    private double fpsScoreTarget = ((double) 1/60) / 50000.1;//secondes/triangle rendered 50 000 triangle 60 times by second
 
     private int nbTriRender = 0;
 
     public Engine3D(int iWidthInit, int iHeightInit) {
+        fpsScoreTarget = 0.0912/13252;
         this.camera = new Camera(0.1,1000,90);
 
         this.worldRotationAngle = 0;
@@ -52,20 +46,24 @@ public class Engine3D extends JPanel {
 
         inputManager.attachTo(this);
 
-        // .OBJ file reading + construction of the 3D triangle to render
-        this.mesh = ObjLoader.readObjFile(Paths.get("obj model\\teapot.obj"));
+        this.scene = new Scene(
+                new String[] {"obj model\\teapot.obj", "obj model\\axis.obj"},
+                new String[] {"teapot"               ,"axis"}
+        );
 
-        // Projection matrix coefficient definition initialisation
-        this.camera.updateWindowProjectionMatrix(this);
+
+//        this.scene.addMesh(ObjLoader.readObjFile(Paths.get("obj model\\teapot.obj")), "teapot");
+//
+//        this.scene.addMesh(ObjLoader.readObjFile(Paths.get("obj model\\axis.obj")), "axis");
 
         this.timeLoop = new Timer(16, e -> repaint());
-        this.headUpDisplay = new headUpDisplay();
 
-        this.pipeline = new Pipeline(mesh, camera);
-
-        this.setLayout(null); // on utilise null pour positioner manuellement
-        headUpDisplay.setBounds(10, 10, 80, 20); // x, y, largeur, hauteur
+        this.headUpDisplay = new HeadUpDisplay();
+        this.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 10));
         this.add(headUpDisplay);
+
+        this.pipeline = new Pipeline(camera, scene);
+
         this.repaint();
     }
 
@@ -84,28 +82,28 @@ public class Engine3D extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        this.setNbTriRender(0);
 
         // Real time aspect actualisation
         camera.updateWindowProjectionMatrix(this);
 
         long now = System.nanoTime();
         elapsedTime = (now - startFrameTime) / 1_000_000_000.0; // secondes
-        deltaTime = (now - lastFrameTime) / 1_000_000_000.0; // secondes
+        lastFrameDuration = (now - lastFrameTime) / 1_000_000_000.0; // secondes
         lastFrameTime = now;
-//        System.out.println(deltaTime);
 
         inputManager.handleKeyPress();
 //        inputManager.handleMouseWheelInput();
-        camera.updateCamReferential();
-        camera.updateProjectionMatrix(this);
-        headUpDisplay.calcFpsPerFrame(this);
 
-        // Actualisation of theta
-//        worldRotationAngle += 0.05;
-//        System.out.println(this.theta);
+        camera.updateCamReferentialMatrix();
+        camera.updateProjectionMatrix(this);
+
+    //      objectWorldRotationAngle += 0.05;
         pipeline.setWorldRotationAngle(worldRotationAngle);
 
-        pipeline.pipelineExecution(windowWidth, windowWHeight,g);
+        pipeline.pipelineExecution(windowWidth, windowWHeight,g,this);
+
+        headUpDisplay.updateStats(this);
     }
 
     public static void main(String[] args) {
@@ -133,12 +131,12 @@ public class Engine3D extends JPanel {
         this.windowWidth = windowWidth;
     }
 
-    public void setWindowWHeight(int windowWHeight) {
+    public void setWindowHeight(int windowWHeight) {
         this.windowWHeight = windowWHeight;
     }
 
-    public double getDeltaTime() {
-        return deltaTime;
+    public double getLastFrameDuration() {
+        return lastFrameDuration;
     }
 
     public int getNbFrames() {
@@ -149,12 +147,16 @@ public class Engine3D extends JPanel {
         this.nbFrames = nbFrames;
     }
 
-    public long getLastFPSTime() {
-        return lastFPSTime;
+    public double getFpsScoreTarget() {
+        return fpsScoreTarget;
     }
 
-    public void setLastFPSTime(long lastFPSTime) {
-        this.lastFPSTime = lastFPSTime;
+    public void setNbTriRender(int nbTriRender) {
+        this.nbTriRender = nbTriRender;
+    }
+
+    public int getNbTriRender() {
+        return nbTriRender;
     }
 }
 

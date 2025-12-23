@@ -64,22 +64,30 @@ public class Camera {
     }
 
     public void updateWindowProjectionMatrix(Engine3D engine3D) {
-        if (engine3D.getWidth() != engine3D.getWindowWidth() || engine3D.getHeight() != engine3D.getWindowWHeight()) {
-            engine3D.setWindowWidth(engine3D.getWidth());
-            engine3D.setWindowWHeight(engine3D.getHeight());
+        int currentWindowWidth = engine3D.getWidth();
+        int currentWindowHeight = engine3D.getHeight();
 
-            this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight(), zoom);
+        int pastWindowWidth = engine3D.getWindowWidth();
+        int pastWindowHeight = engine3D.getWindowWHeight();
+
+        if (currentWindowWidth != pastWindowWidth || currentWindowHeight != pastWindowHeight) {
+            if (currentWindowWidth != pastWindowWidth) {
+                engine3D.setWindowWidth(currentWindowWidth);
+            }
+
+            if (currentWindowHeight != pastWindowHeight) {
+                engine3D.setWindowHeight(currentWindowHeight);
+            }
+
+            this.updateProjectionMatrix(engine3D);
         }
     }
 
     public void updateProjectionMatrix(Engine3D engine3D) {
-        engine3D.setWindowWidth(engine3D.getWidth());
-        engine3D.setWindowWHeight(engine3D.getHeight());
-
         this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight(), zoom);
     }
 
-    public void updateCamReferential() {
+    public void updateCamReferentialMatrix() {
         Vector3D[] localAxes = {new Vector3D(0,0,1),
                                 new Vector3D(0,1,0),
                                 new Vector3D(1,0,0)};

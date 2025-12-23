@@ -60,8 +60,8 @@ public abstract class ObjLoader {
                     }
                 }
             }
-            Mesh mesh = new Mesh(indicesFaces, vertices);
-            mesh.triConstruct();
+            Mesh mesh = new Mesh();
+            mesh.triConstruct(indicesFaces, vertices);
 
             return mesh;
 
@@ -73,6 +73,5 @@ public abstract class ObjLoader {
 
     public static void main(String[] args) {
         Mesh mesh = readObjFile(Paths.get("C:\\Users\\marti\\Desktop\\premier test.obj"));
-        mesh.printMesh();
     }
 }

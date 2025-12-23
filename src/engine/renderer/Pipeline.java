@@ -1,5 +1,7 @@
 package engine.renderer;
 
+import engine.core.Engine3D;
+import engine.core.Scene;
 import engine.math.geometry.Mesh;
 import engine.math.geometry.Plane;
 import engine.math.geometry.Triangle;
@@ -18,13 +20,13 @@ public class Pipeline {
     private Matrix worldTransformMatrix;
     private List<Triangle> trisToProcess;
     private List<Triangle> trisToRender;
-    private Mesh mesh;
     private Camera camera;
     private double worldRotationAngle;
+    private Scene scene;
 
-    public Pipeline(Mesh mesh, Camera camera) {
-        this.mesh = mesh;
+    public Pipeline(Camera camera, Scene scene) {
         this.camera = camera;
+        this.scene = scene;
         this.updateViewMatrix();
         this.updateWorldTransformMatrix();
     }
@@ -37,21 +39,24 @@ public class Pipeline {
         this.worldTransformMatrix = Matrix.createWorldTransformMatrix(this.worldRotationAngle * 0.5,this.worldRotationAngle * 1,0,0,0,14);
     }
 
-    public void pipelineExecution(int iWinWidth, int iWinHeight, Graphics g) {
+    public void pipelineExecution(int iWinWidth, int iWinHeight, Graphics g, Engine3D engine3D) {
         this.updateWorldTransformMatrix();
         this.updateViewMatrix();
 
-        this.generateRenderList(iWinWidth,iWinHeight);
+        this.generateRenderList(iWinWidth, iWinHeight);
 
         this.paintersAlgorithm();
 
-        this.finalRenderPass(iWinWidth,iWinHeight,g);
+        this.finalRenderPass(iWinWidth, iWinHeight, g, engine3D);
     }
 
     public void generateRenderList(int iWinWidth, int iWinHeight) {
-        this.trisToProcess = new ArrayList<>();
+        this.scene.initiateTriangleList();
 
-        for (Triangle triMeshClean : this.mesh.getMeshTriangle()) {
+        this.trisToProcess = new ArrayList<>();
+        List<Triangle> sceneTriangles = this.scene.getTriangleList();
+
+        for (Triangle triMeshClean : sceneTriangles) {
             Triangle triTransformed = triMeshClean.transformed(this.worldTransformMatrix);
 
             if (triTransformed.isFacing(this.camera)) {
@@ -63,29 +68,10 @@ public class Pipeline {
                 int nbClippedTris = frontClippingPlane.clipTriangleAgainstPlane(triTransformed, this.trisToProcess);
 
                 for (int n = 0; n < nbClippedTris; n++) {
-                    this.trisToProcess.get(this.trisToProcess.size() - (1+n)).projectToScreenInPlace(this.camera.getProjectionMatrix(), iWinHeight, iWinWidth);
+                    this.trisToProcess.get(this.trisToProcess.size() - (1+n)).projectToScreenInPlace(this.camera.getProjectionMatrix(), iWinWidth, iWinHeight);
                 }
             }
         }
-    }
-
-    public void backFaceCulling() {
-    }
-
-    public void setLighting() {
-
-    }
-
-    public void applyViewTransform() {
-
-    }
-
-    public void clipAgainstNearPlane() {
-
-    }
-
-    public void projectTriangles() {
-
     }
 
     public void paintersAlgorithm() {
@@ -96,11 +82,11 @@ public class Pipeline {
         });
     }
 
-    public void finalRenderPass(int iWinWidth, int iWinHeight, Graphics g) {
+    public void finalRenderPass(int iWinWidth, int iWinHeight, Graphics g, Engine3D engine3D) {
         for (Triangle triToClip : trisToProcess) {
             this.clipAgainstScreenBounds(iWinWidth, iWinHeight, triToClip);
 
-            this.rasterization(g);
+            this.rasterization(g, engine3D);
         }
     }
 
@@ -109,21 +95,19 @@ public class Pipeline {
         trisToRender.add(triToClip);
 
         for (int p = 0; p < 4; p++) {
-            int nbTrisToAdd = 1;
             List<Triangle> futureTestToClip = new ArrayList<>();
             for(Triangle test : trisToRender) {
-                nbTrisToAdd = planeToClipAgainst(p, iWinWidth, iWinHeight).clipTriangleAgainstPlane(test, futureTestToClip);
+                int nbTrisToAdd = planeToClipAgainst(p, iWinWidth, iWinHeight).clipTriangleAgainstPlane(test, futureTestToClip);
             }
             trisToRender = futureTestToClip;
         }
     }
 
-    public void rasterization(Graphics g) {
+    public void rasterization(Graphics g, Engine3D engine3D) {
         for (Triangle triToDraw : trisToRender) {
             // Getting back the coordinate to draw the 2D triangle
             int[] xs = new int[3];
             int[] ys = new int[3];
-
             triToDraw.get2DCoordinates(xs, ys);
 
             Graphics2D g2 = (Graphics2D) g;
@@ -131,11 +115,13 @@ public class Pipeline {
             g2.setColor(triToDraw.getColor()); // Setting the correct color
             g2.fillPolygon(xs, ys, 3);
 
-            g2.setColor(Color.BLACK);
-            g2.drawPolygon(xs, ys, 3);
+//            g2.setColor(Color.BLACK); // Drawing the outline
+//            g2.drawPolygon(xs, ys, 3);
 
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-            //System.out.println(nbTriRender++);
+
+            engine3D.setNbTriRender(engine3D.getNbTriRender() + 1);
+            System.out.println("nb tris :" + engine3D.getNbTriRender() + ", frame duration : " + engine3D.getLastFrameDuration());
         }
     }
 

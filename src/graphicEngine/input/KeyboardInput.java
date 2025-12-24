@@ -1,17 +1,10 @@
-package engine.input;
-
-import engine.core.Engine3D;
+package graphicEngine.input;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class KeyboardInput implements KeyListener {
-    private Engine3D engine3D;
     private final boolean[] keysPressed = new boolean[256];
-
-    public KeyboardInput(Engine3D engine3D) {
-        this.engine3D = engine3D;
-    }
 
     // Action listener methods
     @Override
@@ -26,10 +19,6 @@ public class KeyboardInput implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-    }
-
-    public Engine3D getEngine3D() {
-        return engine3D;
     }
 
     public boolean[] getKeysPressed() {

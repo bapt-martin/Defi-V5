@@ -1,4 +1,4 @@
-package engine.math.tools;
+package graphicEngine.math.tools;
 
 import static java.lang.Math.sqrt;
 

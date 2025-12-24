@@ -1,32 +1,33 @@
-package engine.renderer;
+package graphicEngine.renderer;
 
-import engine.core.Engine3D;
-import engine.core.Scene;
-import engine.math.geometry.Mesh;
-import engine.math.geometry.Plane;
-import engine.math.geometry.Triangle;
-import engine.math.geometry.Vertex3D;
-import engine.math.tools.Matrix;
-import engine.math.tools.Vector3D;
+import graphicEngine.core.EngineContext;
+import graphicEngine.scene.Scene;
+import graphicEngine.math.geometry.Plane;
+import graphicEngine.math.geometry.Triangle;
+import graphicEngine.math.geometry.Vertex3D;
+import graphicEngine.math.tools.Matrix;
+import graphicEngine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static engine.math.geometry.Plane.planeToClipAgainst;
+import static graphicEngine.math.geometry.Plane.planeToClipAgainst;
 
 public class Pipeline {
     private Matrix viewMatrix;
     private Matrix worldTransformMatrix;
     private List<Triangle> trisToProcess;
     private List<Triangle> trisToRender;
-    private Camera camera;
+    private final Camera camera;
     private double worldRotationAngle;
-    private Scene scene;
+    private final Scene scene;
+    private final EngineContext engineContext;
 
-    public Pipeline(Camera camera, Scene scene) {
+    public Pipeline(Camera camera, Scene scene, EngineContext engineContext) {
         this.camera = camera;
         this.scene = scene;
+        this.engineContext = engineContext;
         this.updateViewMatrix();
         this.updateWorldTransformMatrix();
     }
@@ -39,19 +40,22 @@ public class Pipeline {
         this.worldTransformMatrix = Matrix.createWorldTransformMatrix(this.worldRotationAngle * 0.5,this.worldRotationAngle * 1,0,0,0,14);
     }
 
-    public void pipelineExecution(int iWinWidth, int iWinHeight, Graphics g, Engine3D engine3D) {
+    public void pipelineExecution(Graphics g) {
         this.updateWorldTransformMatrix();
         this.updateViewMatrix();
 
-        this.generateRenderList(iWinWidth, iWinHeight);
+        this.generateRenderList();
 
         this.paintersAlgorithm();
 
-        this.finalRenderPass(iWinWidth, iWinHeight, g, engine3D);
+        this.finalRenderPass(g);
     }
 
-    public void generateRenderList(int iWinWidth, int iWinHeight) {
+    public void generateRenderList() {
         this.scene.initiateTriangleList();
+        int width = engineContext.getWindowWidth();
+        int height = engineContext.getWindowHeight();
+
 
         this.trisToProcess = new ArrayList<>();
         List<Triangle> sceneTriangles = this.scene.getTriangleList();
@@ -68,7 +72,7 @@ public class Pipeline {
                 int nbClippedTris = frontClippingPlane.clipTriangleAgainstPlane(triTransformed, this.trisToProcess);
 
                 for (int n = 0; n < nbClippedTris; n++) {
-                    this.trisToProcess.get(this.trisToProcess.size() - (1+n)).projectToScreenInPlace(this.camera.getProjectionMatrix(), iWinWidth, iWinHeight);
+                    this.trisToProcess.get(this.trisToProcess.size() - (1+n)).projectToScreenInPlace(this.camera.getProjectionMatrix(), width, height);
                 }
             }
         }
@@ -82,11 +86,14 @@ public class Pipeline {
         });
     }
 
-    public void finalRenderPass(int iWinWidth, int iWinHeight, Graphics g, Engine3D engine3D) {
-        for (Triangle triToClip : trisToProcess) {
-            this.clipAgainstScreenBounds(iWinWidth, iWinHeight, triToClip);
+    public void finalRenderPass(Graphics g) {
+        int width = engineContext.getWindowWidth();
+        int height = engineContext.getWindowHeight();
 
-            this.rasterization(g, engine3D);
+        for (Triangle triToClip : trisToProcess) {
+            this.clipAgainstScreenBounds(width, height, triToClip);
+
+            this.rasterization(engineContext, g);
         }
     }
 
@@ -97,31 +104,18 @@ public class Pipeline {
         for (int p = 0; p < 4; p++) {
             List<Triangle> futureTestToClip = new ArrayList<>();
             for(Triangle test : trisToRender) {
-                int nbTrisToAdd = planeToClipAgainst(p, iWinWidth, iWinHeight).clipTriangleAgainstPlane(test, futureTestToClip);
+                planeToClipAgainst(p, iWinWidth, iWinHeight).clipTriangleAgainstPlane(test, futureTestToClip);
             }
             trisToRender = futureTestToClip;
         }
     }
 
-    public void rasterization(Graphics g, Engine3D engine3D) {
+    public void rasterization(EngineContext engineContext, Graphics g) {
         for (Triangle triToDraw : trisToRender) {
-            // Getting back the coordinate to draw the 2D triangle
-            int[] xs = new int[3];
-            int[] ys = new int[3];
-            triToDraw.get2DCoordinates(xs, ys);
+            triToDraw.drawTriangle(g, false);
 
-            Graphics2D g2 = (Graphics2D) g;
-
-            g2.setColor(triToDraw.getColor()); // Setting the correct color
-            g2.fillPolygon(xs, ys, 3);
-
-//            g2.setColor(Color.BLACK); // Drawing the outline
-//            g2.drawPolygon(xs, ys, 3);
-
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-
-            engine3D.setNbTriRender(engine3D.getNbTriRender() + 1);
-            System.out.println("nb tris :" + engine3D.getNbTriRender() + ", frame duration : " + engine3D.getLastFrameDuration());
+            engineContext.updateNbRenderedTriangle();
+            System.out.println("nb tris :" + engineContext.getNbTriRenderPerFrame() + ", frame duration : " + engineContext.getLastFrameDuration());
         }
     }
 

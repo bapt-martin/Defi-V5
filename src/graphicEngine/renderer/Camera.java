@@ -1,11 +1,13 @@
-package engine.renderer;
+package graphicEngine.renderer;
 
-import engine.core.Engine3D;
-import engine.math.tools.Matrix;
-import engine.math.tools.Vector3D;
-import engine.math.geometry.Vertex3D;
+import graphicEngine.core.EngineContext;
+import graphicEngine.math.tools.Matrix;
+import graphicEngine.math.tools.Vector3D;
+import graphicEngine.math.geometry.Vertex3D;
 
 public class Camera {
+    private EngineContext engineContext;
+
     private Vertex3D cameraPosition;
     private Vector3D cameraDirection;
     private Vector3D cameraUp;
@@ -26,7 +28,7 @@ public class Camera {
     private double zoom;
     private double zoomFactor;
 
-    public Camera() {
+    public Camera(EngineContext engineContext) {
         this.cameraPosition = new Vertex3D(0, 0, 1);
         this.cameraDirection = new Vector3D(0, 0, 1);
         this.cameraUp = new Vector3D(0, 1, 0);
@@ -39,52 +41,41 @@ public class Camera {
         this.fov = 90;
         this.zoom = 1;
         this.zoomFactor = 0.1;
+        this.engineContext = engineContext;
     }
 
-    public Camera(double near, double far, double fov) {
-        this();
+    public Camera(double near, double far, double fov, EngineContext engineContext) {
+        this(engineContext);
         this.near = near;
         this.far = far;
         this.fov = fov;
 
     }
 
-    public Camera(Vertex3D cameraPosition, Vector3D cameraDirection, Vector3D cameraUp, Vector3D cameraRight, double camPitch, double camYaw, double camRoll, Matrix projectionMatrix, double near, double far, double fov) {
-        this.cameraPosition = new Vertex3D(cameraPosition);
-        this.cameraDirection = new Vector3D(cameraDirection);
-        this.cameraUp = new Vector3D(cameraUp);
-        this.cameraRight = new Vector3D(cameraRight);
-        this.camPitch = camPitch;
-        this.camYaw = camYaw;
-        this.camRoll = camRoll;
-        this.projectionMatrix = new Matrix(projectionMatrix);
-        this.near = near;
-        this.far = far;
-        this.fov = fov;
-    }
+    public void updateWindowProjectionMatrix() {
+        int currentWindowWidth = engineContext.getWindowWidth();
+        int currentWindowHeight = engineContext.getWindowHeight();
 
-    public void updateWindowProjectionMatrix(Engine3D engine3D) {
-        int currentWindowWidth = engine3D.getWidth();
-        int currentWindowHeight = engine3D.getHeight();
+        engineContext.updateWindowInformation();
 
-        int pastWindowWidth = engine3D.getWindowWidth();
-        int pastWindowHeight = engine3D.getWindowWHeight();
+        int pastWindowWidth = engineContext.getWindowWidth();
+        int pastWindowHeight = engineContext.getWindowHeight();
 
         if (currentWindowWidth != pastWindowWidth || currentWindowHeight != pastWindowHeight) {
             if (currentWindowWidth != pastWindowWidth) {
-                engine3D.setWindowWidth(currentWindowWidth);
+                engineContext.setWindowWidth(currentWindowWidth);
             }
 
             if (currentWindowHeight != pastWindowHeight) {
-                engine3D.setWindowHeight(currentWindowHeight);
+                engineContext.setWindowHeight(currentWindowHeight);
             }
 
-            this.updateProjectionMatrix(engine3D);
+            this.updateProjectionMatrix();
         }
     }
 
-    public void updateProjectionMatrix(Engine3D engine3D) {
-        this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engine3D.getWindowWidth(), engine3D.getWindowWHeight(), zoom);
+    public void updateProjectionMatrix() {
+        this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engineContext.getWindowWidth(), engineContext.getWindowHeight(), zoom);
     }
 
     public void updateCamReferentialMatrix() {

@@ -1,5 +1,5 @@
-package engine.math.tools;
-import engine.math.geometry.Vertex3D;
+package graphicEngine.math.tools;
+import graphicEngine.math.geometry.Vertex3D;
 
 import static java.lang.Math.*;
 

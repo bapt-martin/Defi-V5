@@ -1,6 +1,6 @@
-package engine.math.geometry;
+package graphicEngine.math.geometry;
 
-import engine.math.tools.Vector3D;
+import graphicEngine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.List;

@@ -1,6 +1,6 @@
-package engine.input;
+package graphicEngine.input;
 
-import engine.core.Engine3D;
+import graphicEngine.core.Engine3D;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -37,7 +37,7 @@ public class MouseInput implements MouseListener, MouseWheelListener {
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        System.out.println("zrreg" + e.getX() +" : "+ e.getY());
+        System.out.println("ENTER" + e.getX() +" : "+ e.getY());
         engine3D.requestFocusInWindow();
     }
 

@@ -1,4 +1,4 @@
-package engine.math.tools;
+package graphicEngine.math.tools;
 
 public class Quaternion {
     private double w;

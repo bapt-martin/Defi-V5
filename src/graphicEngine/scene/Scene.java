@@ -1,8 +1,8 @@
-package engine.core;
+package graphicEngine.scene;
 
-import engine.io.ObjLoader;
-import engine.math.geometry.Mesh;
-import engine.math.geometry.Triangle;
+import graphicEngine.io.ObjLoader;
+import graphicEngine.math.geometry.Mesh;
+import graphicEngine.math.geometry.Triangle;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -11,6 +11,7 @@ import java.util.List;
 public class Scene {
     private List<Mesh> meshList;
     private List<Triangle> triangleList;
+
 
     public Scene(String[] meshesPath, String[] meshesName) {
         int size = meshesPath.length;

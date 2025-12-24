@@ -1,14 +1,16 @@
-package engine.input;
+package graphicEngine.input;
 
-import engine.renderer.Camera;
-import engine.core.Engine3D;
-import engine.math.geometry.Vertex3D;
+import graphicEngine.core.EngineContext;
+import graphicEngine.renderer.Camera;
+import graphicEngine.core.Engine3D;
+import graphicEngine.math.geometry.Vertex3D;
 
 import java.awt.*;
 import java.awt.event.*;
 
 public class InputManager {
-    private final Engine3D engine3D;
+    private final EngineContext engineContext;
+    private Engine3D engine3D;
     private final Camera camera;
     private final KeyboardInput keyboardInput;
     private final MouseInput mouseInput;
@@ -16,11 +18,12 @@ public class InputManager {
     private Robot robot;
 
     public InputManager(Engine3D engine3D, Camera camera) {
-        this.engine3D = engine3D;
+        this.engineContext = engine3D.getEngineContext();
         this.camera = camera;
-        this.keyboardInput = new KeyboardInput(engine3D);
+        this.keyboardInput = new KeyboardInput();
+        this.engine3D = engine3D;
         this.mouseInput = new MouseInput(engine3D, this);
-        this.mouseMotionInput = new MouseMotionInput(engine3D, this);
+        this.mouseMotionInput = new MouseMotionInput(engine3D,engineContext,this);
 
         try {
             this.robot = new Robot();
@@ -39,9 +42,7 @@ public class InputManager {
     }
 
     public void moveMouseWindow(Vertex3D coordinatesIn) {
-        Vertex3D winPosition = new Vertex3D(this.engine3D.getLocationOnScreen());
-
-        Vertex3D coordinatesOut = coordinatesIn.add(winPosition);
+        Vertex3D coordinatesOut = coordinatesIn.add(engineContext.getWindowPosition());
 
         robot.mouseMove((int) coordinatesOut.getX(), (int) coordinatesOut.getY());
 
@@ -49,12 +50,12 @@ public class InputManager {
     }
 
     public void centerMouse() {
-        Vertex3D winPanelCenter = new Vertex3D(this.engine3D.getWindowWidth() /2, this.engine3D.getWindowWHeight() /2,0);
+        Vertex3D winPanelCenter = new Vertex3D(engineContext.getWindowWidth()/2.0, engineContext.getWindowHeight()/2.0,0);
         this.moveMouseWindow(winPanelCenter);
     }
 
     public void handleKeyPress() {
-        double deltaFrameTime = engine3D.getLastFrameDuration();
+        double deltaFrameTime = engineContext.getLastFrameDuration();
         // TRANSLATION
         // Q = Left
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_Q]) {
@@ -94,27 +95,27 @@ public class InputManager {
 
         // DOWN = Clockwise X-Axis rotation Pitch
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_DOWN]) {
-            camera.setCamPitch(camera.getCamPitch() - camera.getdRotationCameraSpeed() * engine3D.getLastFrameDuration());
+            camera.setCamPitch(camera.getCamPitch() - camera.getdRotationCameraSpeed() * engineContext.getLastFrameDuration());
         }
 
         // RIGHT = Anti-Clockwise Y-Axis rotation Yaw
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_RIGHT]) {
-            camera.setCamYaw(camera.getCamYaw() + camera.getdRotationCameraSpeed() * engine3D.getLastFrameDuration());
+            camera.setCamYaw(camera.getCamYaw() + camera.getdRotationCameraSpeed() * engineContext.getLastFrameDuration());
         }
 
         // LEFT = Clockwise Y-Axis rotation Yaw
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_LEFT]) {
-            camera.setCamYaw(camera.getCamYaw() - camera.getdRotationCameraSpeed() * engine3D.getLastFrameDuration());
+            camera.setCamYaw(camera.getCamYaw() - camera.getdRotationCameraSpeed() * engineContext.getLastFrameDuration());
         }
 
         // A = Anti-Clockwise Z-Axis rotation Roll
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_A]) {
-            camera.setCamRoll(camera.getCamRoll() + camera.getdRotationCameraSpeed() * engine3D.getLastFrameDuration());
+            camera.setCamRoll(camera.getCamRoll() + camera.getdRotationCameraSpeed() * engineContext.getLastFrameDuration());
         }
 
         // E = Clockwise Y-Axis rotation Roll
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_E]) {
-            camera.setCamRoll(camera.getCamRoll() - camera.getdRotationCameraSpeed() * engine3D.getLastFrameDuration());
+            camera.setCamRoll(camera.getCamRoll() - camera.getdRotationCameraSpeed() * engineContext.getLastFrameDuration());
         }
     }
 

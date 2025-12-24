@@ -1,7 +1,7 @@
-package engine.io;
+package graphicEngine.io;
 
-import engine.math.geometry.Mesh;
-import engine.math.geometry.Vertex3D;
+import graphicEngine.math.geometry.Mesh;
+import graphicEngine.math.geometry.Vertex3D;
 
 import java.io.BufferedReader;
 import java.io.IOException;

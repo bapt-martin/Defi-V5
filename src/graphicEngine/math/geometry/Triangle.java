@@ -1,8 +1,8 @@
-package engine.math.geometry;
+package graphicEngine.math.geometry;
 
-import engine.renderer.Camera;
-import engine.math.tools.Matrix;
-import engine.math.tools.Vector3D;
+import graphicEngine.renderer.Camera;
+import graphicEngine.math.tools.Matrix;
+import graphicEngine.math.tools.Vector3D;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -102,6 +102,25 @@ public class Triangle {
         vertsIn[2].translateInPlace(vectTranslation);
 
         return this;
+    }
+
+    public void drawTriangle(Graphics g, boolean isOutlineRender) {
+        // Getting back the coordinate to draw the 2D triangle
+        int[] xs = new int[3];
+        int[] ys = new int[3];
+        this.get2DCoordinates(xs, ys);
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        g2.setColor(this.getColor()); // Setting the correct color
+        g2.fillPolygon(xs, ys, 3);
+
+        if (isOutlineRender) {
+            g2.setColor(Color.BLACK); // Drawing the outline
+            g2.drawPolygon(xs, ys, 3);
+        }
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
     public Triangle convertToWindowSpace(int iWinWidth, int iWinHeight) {

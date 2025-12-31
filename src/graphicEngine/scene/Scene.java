@@ -2,51 +2,65 @@ package graphicEngine.scene;
 
 import graphicEngine.io.ObjLoader;
 import graphicEngine.math.geometry.Mesh;
-import graphicEngine.math.geometry.Triangle;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Scene {
-    private List<Mesh> meshList;
-    private List<Triangle> triangleList;
+    private final Map<String, Mesh> meshLibrary;
+    private final Map<String, GameObject> objectsMap;
+    private final List<GameObject> renderQueue;
 
+    public record MeshData(String name, String path) {}
+    public record ObjectData(String name, String meshName) {}
 
-    public Scene(String[] meshesPath, String[] meshesName) {
-        int size = meshesPath.length;
-        this.meshList = new ArrayList<>();
-        for (int i=0; i<size; i++) {
-            this.addMesh(ObjLoader.readObjFile(Paths.get(meshesPath[i])), meshesName[i]);
+    public Scene() {
+        this.renderQueue = new ArrayList<>();
+        this.objectsMap = new HashMap<>();
+        this.meshLibrary = new HashMap<>();
+    }
+
+    public void loadMeshes(List<MeshData> meshesToLoad) {
+        for (MeshData meshData : meshesToLoad) {
+            this.addMesh(meshData.name(),ObjLoader.readObjFile(Paths.get(meshData.path())));
         }
     }
 
-    public void addMesh(Mesh mesh, String meshName) {
+    public void addMultipleGameObject(List<ObjectData> objectReferences) {
+        for (ObjectData objectData : objectReferences) {
+            GameObject gameObject = new GameObject(meshLibrary.get(objectData.meshName()));
+            this.addGameObject(objectData.name(), gameObject);
+
+        }
+    }
+
+    public void addGameObject(String objectName, GameObject gameObject) {
+        gameObject.setName(objectName);
+        this.objectsMap.put(objectName,gameObject);
+        this.renderQueue.add(gameObject);
+    }
+
+    public void addMesh(String meshName, Mesh mesh) {
         mesh.setMeshName(meshName);
-        this.meshList.add(mesh);
+        this.meshLibrary.put(meshName,mesh);
     }
 
-    public void initiateTriangleList() {
-        List<Triangle> sceneTriangleList = new ArrayList<>();
-        List<Mesh> meshList = this.getMeshList();
-
-        for (Mesh mesh : meshList) {
-            List<Triangle> meshTriangleList = mesh.getMeshTriangle();
-            sceneTriangleList.addAll(meshTriangleList);
-        }
-
-        this.triangleList = sceneTriangleList;
+    public Map<String, Mesh> getMeshLibrary() {
+        return meshLibrary;
     }
 
-    public List<Triangle> getTriangleList() {
-        return triangleList;
+    public Map<String, GameObject> getObjectsMap() {
+        return objectsMap;
     }
 
-    public List<Mesh> getMeshList() {
-        return meshList;
+    public GameObject getGameObject(String objectName) {
+        return this.objectsMap.get(objectName);
     }
 
-    public void setMeshList(List<Mesh> meshList) {
-        this.meshList = meshList;
+    public List<GameObject> getRenderQueue() {
+        return renderQueue;
     }
 }

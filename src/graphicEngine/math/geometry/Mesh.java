@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Mesh {
     private List<Triangle> meshTriangle;
-    private String meshName ="";
+    private String meshName = "";
 
     public Mesh() {
         this.meshTriangle = new ArrayList<>();

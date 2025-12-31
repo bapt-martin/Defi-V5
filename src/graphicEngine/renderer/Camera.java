@@ -29,7 +29,7 @@ public class Camera {
     private double zoomFactor;
 
     public Camera(EngineContext engineContext) {
-        this.cameraPosition = new Vertex3D(0, 0, 1);
+        this.cameraPosition = new Vertex3D(0, 0, -14);
         this.cameraDirection = new Vector3D(0, 0, 1);
         this.cameraUp = new Vector3D(0, 1, 0);
         this.cameraRight = new Vector3D(1, 0, 0);
@@ -53,23 +53,15 @@ public class Camera {
     }
 
     public void updateWindowProjectionMatrix() {
-        int currentWindowWidth = engineContext.getWindowWidth();
-        int currentWindowHeight = engineContext.getWindowHeight();
+        int lastWindowWidth = engineContext.getWindowWidth();
+        int lastWindowHeight = engineContext.getWindowHeight();
 
         engineContext.updateWindowInformation();
 
-        int pastWindowWidth = engineContext.getWindowWidth();
-        int pastWindowHeight = engineContext.getWindowHeight();
+        int currentWindowWidth = engineContext.getWindowWidth();
+        int currentWindowHeight = engineContext.getWindowHeight();
 
-        if (currentWindowWidth != pastWindowWidth || currentWindowHeight != pastWindowHeight) {
-            if (currentWindowWidth != pastWindowWidth) {
-                engineContext.setWindowWidth(currentWindowWidth);
-            }
-
-            if (currentWindowHeight != pastWindowHeight) {
-                engineContext.setWindowHeight(currentWindowHeight);
-            }
-
+        if (lastWindowWidth != currentWindowWidth || lastWindowHeight != currentWindowHeight) {
             this.updateProjectionMatrix();
         }
     }

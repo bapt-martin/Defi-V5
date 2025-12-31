@@ -49,7 +49,7 @@ public class Matrix {
         double scalingFactorRad = zoom / tan(fov * 0.5 / 180 * Math.PI);
 
         double[][] matProj = new double[4][4];
-        matProj[0][0] = aspectRatio * scalingFactorRad;
+        matProj[0][0] = scalingFactorRad * aspectRatio;
         matProj[1][1] = scalingFactorRad;
         matProj[2][2] = q;
         matProj[3][3] = 0;
@@ -68,13 +68,14 @@ public class Matrix {
         return matRotX.multiply(matRotY).multiply(matRotZ);
     }
 
-    public static Matrix createWorldTransformMatrix(double theta, double phi, double psi, double x, double y, double z) {
-        Matrix matRotationTot = Matrix.createEulerRotation(theta,phi,psi);
-
+    public static Matrix createWorldTransformMatrix(double sx, double sy, double sz, double theta, double phi, double psi, double x, double y, double z) {
+        Matrix matScaling     = Matrix.createScaling(sx, sy, sz);
+        Matrix matRotation = Matrix.createEulerRotation(theta,phi,psi);
         Matrix matTranslation = Matrix.createTranslation(x,y,z);
 
-        return matRotationTot.multiply(matTranslation);
+        return matScaling.multiply(matRotation).multiply(matTranslation);
     }
+
 
     public static Matrix createViewMatrix(Vertex3D pTargetPosition, Vector3D vTargetDirection, Vector3D vUp) {
         //New forward direction
@@ -117,6 +118,18 @@ public class Matrix {
         return this;
     }
 
+    public static Matrix createScaling(double x, double y, double z) {
+        Matrix scalingMatrix = Matrix.createIdentity(4, 4);
+        double[][] mat = scalingMatrix.getMatrix();
+
+        mat[0][0] = x;
+        mat[1][1] = y;
+        mat[2][2] = z;
+        mat[3][3] = 1;
+
+        return scalingMatrix;
+    }
+
     public static Matrix createIdentity(int nbRow, int nbCol) {
         double[][] matIdentity = new double[nbRow][nbCol];
 
@@ -133,14 +146,15 @@ public class Matrix {
 
     public static Matrix createRotationX(double theta){
         double[][] matRotX = new double[4][4];
+        double radTheta = theta * (Math.PI / 180);
 
         matRotX[0][0] = 1;
-        matRotX[1][1] = cos(theta);
+        matRotX[1][1] = cos(radTheta);
 
-        matRotX[1][2] = sin(theta);
-        matRotX[2][1] = -sin(theta);
+        matRotX[1][2] = sin(radTheta);
+        matRotX[2][1] = -sin(radTheta);
 
-        matRotX[2][2] = cos(theta);
+        matRotX[2][2] = cos(radTheta);
         matRotX[3][3] = 1;
 
         return new Matrix(matRotX);
@@ -148,14 +162,15 @@ public class Matrix {
 
     public static Matrix createRotationY(double theta) {
         double[][] matRotY = new double[4][4];
+        double radTheta = theta * (Math.PI / 180);
 
-        matRotY[0][0] = Math.cos(theta);
-        matRotY[0][2] = Math.sin(theta);
+        matRotY[0][0] = Math.cos(radTheta);
+        matRotY[0][2] = Math.sin(radTheta);
 
         matRotY[1][1] = 1;
-        matRotY[2][0] = -Math.sin(theta);
+        matRotY[2][0] = -Math.sin(radTheta);
 
-        matRotY[2][2] = Math.cos(theta);
+        matRotY[2][2] = Math.cos(radTheta);
         matRotY[3][3] = 1;
 
         return new Matrix(matRotY);
@@ -163,12 +178,13 @@ public class Matrix {
 
     public static Matrix createRotationZ(double theta){
         double[][] matRotZ = new double[4][4];
+        double radTheta = theta * (Math.PI / 180);
 
-        matRotZ[0][0] = cos(theta);
-        matRotZ[0][1] = sin(theta);
+        matRotZ[0][0] = cos(radTheta);
+        matRotZ[0][1] = sin(radTheta);
 
-        matRotZ[1][0] = -sin(theta);
-        matRotZ[1][1] = cos(theta);
+        matRotZ[1][0] = -sin(radTheta);
+        matRotZ[1][1] = cos(radTheta);
 
         matRotZ[2][2] = 1;
         matRotZ[3][3] = 1;

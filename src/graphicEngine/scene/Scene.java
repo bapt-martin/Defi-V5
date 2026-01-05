@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 public class Scene {
+    public record MeshData(String name, String path) {}
+    public record ObjectData(String name, String meshName) {}
+
     private final Map<String, Mesh> meshLibrary;
     private final Map<String, GameObject> objectsMap;
     private final List<GameObject> renderQueue;
 
-    public record MeshData(String name, String path) {}
-    public record ObjectData(String name, String meshName) {}
 
     public Scene() {
         this.renderQueue = new ArrayList<>();

@@ -9,30 +9,29 @@ import graphicEngine.scene.Scene;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
 import java.util.List;
 
-public class Engine3D extends JPanel implements Runnable {
+public class GraphicEngine extends JPanel implements Runnable {
     private final Camera camera;
     private final InputManager inputManager;
     private final HeadUpDisplay headUpDisplay;
     private final Pipeline pipeline;
     private final Scene scene;
-    private final EngineContext engineContext;
+    private final GraphicEngineContext graphicEngineContext;
     private final Timer timeLoop;
 
-    public Engine3D(int widthInit,int heightInit) {
-        this.engineContext = new EngineContext(this, widthInit, heightInit);
+    public GraphicEngine(int widthInit, int heightInit) {
+        this.graphicEngineContext = new GraphicEngineContext(this, widthInit, heightInit);
 
 
-        this.camera = new Camera(0.1,1000,90,engineContext);
+        this.camera = new Camera(0.1,1000,90, graphicEngineContext);
 
 
         this.setBackground(new Color(150,150,200));
 
 
         this.setFocusable(true);
-        this.setFocusTraversalKeysEnabled(false);
+//        this.setFocusTraversalKeysEnabled(false);
         this.requestFocusInWindow();
 
         this.inputManager = new InputManager(this,camera);
@@ -56,15 +55,16 @@ public class Engine3D extends JPanel implements Runnable {
         ));
 
         scene.getGameObject("axis1").setPosition(0, 0, 0);
+        scene.getGameObject("axis1").setScale(-1, 1, 1);
 
         GameObject t1 = scene.getGameObject("teapot1");
         t1.setPosition(-6, 0, 8);
-        t1.setRotation(0, 90, 0);
+        t1.setRotation(0, 0, 0);
         t1.setScale(1, 1, 1);
 
         GameObject t2 = scene.getGameObject("teapot2");
         t2.setPosition(6, 0, 8);
-        t2.setRotation(0.45, 0, 0);
+        t2.setRotation(45, 0, 0);
         t2.setScale(1.5, 1.5, 1.5);
 
         GameObject t3 = scene.getGameObject("teapot3");
@@ -79,12 +79,13 @@ public class Engine3D extends JPanel implements Runnable {
 
         this.timeLoop = new Timer(16, e -> repaint());
 
-        this.headUpDisplay = new HeadUpDisplay(engineContext);
+        this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
         this.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
         this.add(headUpDisplay);
 
 
-        this.pipeline = new Pipeline(camera, scene, engineContext);
+        this.graphicEngineContext.setCamera(this.camera);
+        this.pipeline = new Pipeline(camera, scene, graphicEngineContext);
         this.repaint();
     }
 
@@ -108,7 +109,7 @@ public class Engine3D extends JPanel implements Runnable {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        this.engineContext.resetNbRenderedTriangle();
+        this.graphicEngineContext.resetNbRenderedTriangle();
 
         // Real time aspect actualisation
         camera.updateWindowProjectionMatrix();
@@ -119,26 +120,30 @@ public class Engine3D extends JPanel implements Runnable {
         camera.updateCamReferentialMatrix();
         camera.updateProjectionMatrix();
 
-        pipeline.pipelineExecution(g);
+        pipeline.execution(g);
 
-        headUpDisplay.updateStats();
+        headUpDisplay.update();
     }
 
     public static void main(String[] args) {
-        JFrame window = new JFrame("3D Engine");
+        JFrame window = new JFrame("Graphic Engine");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         int width = 800;
         int height = 600;
         window.setSize(width, height);
 
-        Engine3D engine3D = new Engine3D(width, height);
-        window.add(engine3D);
+        GraphicEngine graphicEngine = new GraphicEngine(width, height);
+        window.add(graphicEngine);
         window.setLocationRelativeTo(null);
         window.setVisible(true);
     }
 
-    public EngineContext getEngineContext() {
-        return engineContext;
+    public GraphicEngineContext getEngineContext() {
+        return graphicEngineContext;
+    }
+
+    public Camera getCamera() {
+        return camera;
     }
 }
 

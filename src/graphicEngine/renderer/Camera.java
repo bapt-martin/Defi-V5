@@ -1,21 +1,18 @@
 package graphicEngine.renderer;
 
-import graphicEngine.core.EngineContext;
+import graphicEngine.core.GraphicEngineContext;
 import graphicEngine.math.tools.Matrix;
 import graphicEngine.math.tools.Vector3D;
 import graphicEngine.math.geometry.Vertex3D;
 
 public class Camera {
-    private EngineContext engineContext;
+    private GraphicEngineContext graphicEngineContext;
 
     private Vertex3D cameraPosition;
+    private CameraRotation cameraRotation;
     private Vector3D cameraDirection;
     private Vector3D cameraUp;
     private Vector3D cameraRight;
-
-    private double camPitch;
-    private double camYaw;
-    private double camRoll;
 
     private Matrix projectionMatrix;
     private double near;
@@ -28,38 +25,48 @@ public class Camera {
     private double zoom;
     private double zoomFactor;
 
-    public Camera(EngineContext engineContext) {
-        this.cameraPosition = new Vertex3D(0, 0, -14);
+
+    public Camera(GraphicEngineContext graphicEngineContext) {
+        this.cameraPosition = new Vertex3D(0, 10, 25);
+        this.cameraRotation = new CameraRotation(0,0,0);
         this.cameraDirection = new Vector3D(0, 0, 1);
         this.cameraUp = new Vector3D(0, 1, 0);
         this.cameraRight = new Vector3D(1, 0, 0);
-        this.camPitch = 0;
-        this.camYaw = 0;
-        this.camRoll = 0;
         this.near = 0.1;
         this.far = 1000;
         this.fov = 90;
         this.zoom = 1;
         this.zoomFactor = 0.1;
-        this.engineContext = engineContext;
+        this.graphicEngineContext = graphicEngineContext;
     }
 
-    public Camera(double near, double far, double fov, EngineContext engineContext) {
-        this(engineContext);
+    public Camera(double near, double far, double fov, GraphicEngineContext graphicEngineContext) {
+        this(graphicEngineContext);
         this.near = near;
         this.far = far;
         this.fov = fov;
+    }
 
+    public class CameraRotation {
+        public double yaw;
+        public double pitch;
+        public double roll;
+
+        public CameraRotation(double yaw, double pitch, double roll) {
+            this.yaw = yaw;
+            this.pitch = pitch;
+            this.roll = roll;
+        }
     }
 
     public void updateWindowProjectionMatrix() {
-        int lastWindowWidth = engineContext.getWindowWidth();
-        int lastWindowHeight = engineContext.getWindowHeight();
+        int lastWindowWidth = graphicEngineContext.getWindowWidth();
+        int lastWindowHeight = graphicEngineContext.getWindowHeight();
 
-        engineContext.updateWindowInformation();
+        graphicEngineContext.updateWindowInformation();
 
-        int currentWindowWidth = engineContext.getWindowWidth();
-        int currentWindowHeight = engineContext.getWindowHeight();
+        int currentWindowWidth = graphicEngineContext.getWindowWidth();
+        int currentWindowHeight = graphicEngineContext.getWindowHeight();
 
         if (lastWindowWidth != currentWindowWidth || lastWindowHeight != currentWindowHeight) {
             this.updateProjectionMatrix();
@@ -67,23 +74,23 @@ public class Camera {
     }
 
     public void updateProjectionMatrix() {
-        this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, engineContext.getWindowWidth(), engineContext.getWindowHeight(), zoom);
+        this.projectionMatrix = Matrix.createProjectionMatrix(this.far, this.near, this.fov, graphicEngineContext.getWindowWidth(), graphicEngineContext.getWindowHeight(), zoom);
     }
 
     public void updateCamReferentialMatrix() {
-        Vector3D[] localAxes = {new Vector3D(0,0,1),
+        Vector3D[] localAxes = {new Vector3D(0,0,-1),
                                 new Vector3D(0,1,0),
                                 new Vector3D(1,0,0)};
 
-        Matrix matCameraRotYaw = Matrix.createRotationAroundAxis(camYaw,localAxes[1]);
-        matCameraRotYaw.rotateBasisInPlace(localAxes);
+        Matrix matCameraRotYaw = Matrix.createRotationAroundAxis(cameraRotation.yaw,localAxes[1]);
+        Vector3D.rotateBasisInPlace(matCameraRotYaw, localAxes);
 
-        camPitch = Math.max(-89.0*Math.PI/180.0, Math.min(89.0*Math.PI/180.0, camPitch));
-        Matrix matCameraRotPitch = Matrix.createRotationAroundAxis(camPitch,localAxes[2]);
-        matCameraRotPitch.rotateBasisInPlace(localAxes);
+        cameraRotation.pitch = Math.max(-89.0*Math.PI/180.0, Math.min(89.0*Math.PI/180.0, cameraRotation.pitch));
+        Matrix matCameraRotPitch = Matrix.createRotationAroundAxis(cameraRotation.pitch,localAxes[2]);
+        Vector3D.rotateBasisInPlace(matCameraRotPitch, localAxes);
 
-        Matrix matCameraRotRoll = Matrix.createRotationAroundAxis(camRoll,localAxes[0]);
-        matCameraRotRoll.rotateBasisInPlace(localAxes);
+        Matrix matCameraRotRoll = Matrix.createRotationAroundAxis(cameraRotation.roll,localAxes[0]);
+        Vector3D.rotateBasisInPlace(matCameraRotRoll, localAxes);
 
         cameraDirection = localAxes[0];
         cameraUp = localAxes[1];
@@ -117,27 +124,27 @@ public class Camera {
     }
 
     public double getCamPitch() {
-        return camPitch;
+        return cameraRotation.pitch;
     }
 
     public void setCamPitch(double camPitch) {
-        this.camPitch = camPitch;
+        this.cameraRotation.pitch = camPitch;
     }
 
     public double getCamYaw() {
-        return camYaw;
+        return cameraRotation.yaw;
     }
 
     public void setCamYaw(double camYaw) {
-        this.camYaw = camYaw;
+        this.cameraRotation.yaw = camYaw;
     }
 
     public double getCamRoll() {
-        return camRoll;
+        return cameraRotation.roll;
     }
 
     public void setCamRoll(double camRoll) {
-        this.camRoll = camRoll;
+        this.cameraRotation.roll = camRoll;
     }
 
     public Matrix getProjectionMatrix() {
@@ -164,8 +171,8 @@ public class Camera {
         return zoomFactor;
     }
 
-    public void setZoomFactor(double zoomFactor) {
-        this.zoomFactor = zoomFactor;
+    public CameraRotation getCameraRotation() {
+        return cameraRotation;
     }
 }
 

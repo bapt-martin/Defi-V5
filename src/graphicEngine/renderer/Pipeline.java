@@ -1,6 +1,6 @@
 package graphicEngine.renderer;
 
-import graphicEngine.core.EngineContext;
+import graphicEngine.core.GraphicEngineContext;
 import graphicEngine.scene.GameObject;
 import graphicEngine.scene.Scene;
 import graphicEngine.math.geometry.Plane;
@@ -18,16 +18,16 @@ import static graphicEngine.math.geometry.Plane.planeToClipAgainst;
 public class Pipeline {
     private final Camera camera;
     private final Scene scene;
-    private final EngineContext engineContext;
+    private final GraphicEngineContext graphicEngineContext;
 
     private Matrix viewMatrix;
     private List<Triangle> processedTriangle;
     private List<Triangle> trisToRender;
 
-    public Pipeline(Camera camera, Scene scene, EngineContext engineContext) {
+    public Pipeline(Camera camera, Scene scene, GraphicEngineContext graphicEngineContext) {
         this.camera = camera;
         this.scene = scene;
-        this.engineContext = engineContext;
+        this.graphicEngineContext = graphicEngineContext;
         this.updateViewMatrix();
         this.processedTriangle = new ArrayList<>();
         this.trisToRender = new ArrayList<>();
@@ -38,10 +38,10 @@ public class Pipeline {
         this.viewMatrix = Matrix.createViewMatrix(this.camera.getCameraPosition(), this.camera.getCameraDirection(), this.camera.getCameraUp());
     }
 
-    public void pipelineExecution(Graphics g) {
+    public void execution(Graphics g) {
         this.updateViewMatrix();
 
-        this.processGeometry();
+        this.processAllGeometry();
 
         this.paintersAlgorithm();
 
@@ -49,36 +49,56 @@ public class Pipeline {
 
     }
 
-    public void processGeometry() {
-        int width = engineContext.getWindowWidth();
-        int height = engineContext.getWindowHeight();
+    public void processAllGeometry() {
+        int width = graphicEngineContext.getWindowWidth();
+        int height = graphicEngineContext.getWindowHeight();
 
-        Vector3D lightDirection = new Vector3D(0, 0, -1);
+        Matrix projectionMatrix = this.camera.getProjectionMatrix();
+
+        Vector3D lightDirection = new Vector3D(0, 0, 1);
         Plane frontClippingPlane = new Plane(new Vertex3D(0, 0, 0.1), new Vector3D(0, 0, 1));
 
         this.processedTriangle.clear();
 
         List<GameObject> renderQueue = scene.getRenderQueue();
-        for (GameObject obj : renderQueue) {
-            List<Triangle> triList = obj.getMesh().getMeshTriangle();
+        for (GameObject gameObject : renderQueue) {
+            this.processGameObject(width, height, projectionMatrix, frontClippingPlane, lightDirection, gameObject);
+        }
+    }
 
-            for (Triangle triMeshClean : triList) {
-                Triangle triTransformed = triMeshClean.transformed(obj.getWorldTransformMatrix());
+    public void processGameObject(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, GameObject gameObject) {
+        Matrix worldTransformMatrix = gameObject.getWorldTransformMatrix();
+        List<Triangle> triList = gameObject.getMesh().getMeshTriangle();
 
-                if (triTransformed.isFacing(this.camera)) {
-                    triTransformed.setLighting(lightDirection);
+        for (Triangle triMeshClean : triList) {
+            this.processTriangle(width, height, projectionMatrix, frontClippingPlane, lightDirection, worldTransformMatrix, triMeshClean);
+        }
+    }
 
-                    triTransformed.transformInPlace(this.getViewMatrix());
+    public void processTriangle(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, Matrix worldTransformMatrix, Triangle triMeshClean) { //Backface Culling
+        Triangle triTransformed = triMeshClean.transformed(worldTransformMatrix);
 
-                    int startIndex = this.processedTriangle.size();
-                    frontClippingPlane.clipTriangleAgainstPlane(triTransformed, this.processedTriangle);
-                    int endIndex = this.processedTriangle.size();
 
-                    for (int i = startIndex; i < endIndex; i++) {
-                        this.processedTriangle.get(i).projectToScreenInPlace(this.camera.getProjectionMatrix(), width, height);
-                    }
-                }
-            }
+        boolean isFlipped = worldTransformMatrix.getDeterminant() < 0;
+
+        if (!triTransformed.isFacing(this.camera,isFlipped)) {
+            return;
+        }
+
+        triTransformed.setLighting(lightDirection, isFlipped);
+
+        triTransformed.transformInPlace(viewMatrix);
+
+        this.clipAndProject(width, height, projectionMatrix, frontClippingPlane, triTransformed);
+    }
+
+    public void clipAndProject(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Triangle triTransformed) {
+        int startIndex = this.processedTriangle.size();
+        frontClippingPlane.clipTriangleAgainstPlane(triTransformed, this.processedTriangle);
+        int endIndex = this.processedTriangle.size();
+
+        for (int i = startIndex; i < endIndex; i++) {
+            this.processedTriangle.get(i).projectToScreenInPlace(projectionMatrix, width, height);
         }
     }
 
@@ -91,15 +111,15 @@ public class Pipeline {
     }
 
     public void rasterizePass(Graphics g) {
-        int width = engineContext.getWindowWidth();
-        int height = engineContext.getWindowHeight();
+        int width = graphicEngineContext.getWindowWidth();
+        int height = graphicEngineContext.getWindowHeight();
         for (Triangle triToClip : processedTriangle) {
             this.clipToScreen(width, height, triToClip);
 
-            this.drawBatch(engineContext, g);
+            this.drawBatch(graphicEngineContext, g);
         }
 
-        System.out.println("nb tris :" + engineContext.getNbTriRenderPerFrame() + ", frame duration : " + engineContext.getLastFrameDuration());
+        System.out.println("nb tris :" + graphicEngineContext.getNbTriRenderPerFrame() + ", frame duration : " + graphicEngineContext.getLastFrameDuration());
     }
 
     public void clipToScreen(int iWinWidth, int iWinHeight, Triangle triToClip) {
@@ -115,11 +135,11 @@ public class Pipeline {
         }
     }
 
-    public void drawBatch(EngineContext engineContext, Graphics g) {
+    public void drawBatch(GraphicEngineContext graphicEngineContext, Graphics g) {
         for (Triangle triToDraw : trisToRender) {
             triToDraw.drawTriangle(g, false);
 
-            engineContext.updateNbRenderedTriangle();
+            graphicEngineContext.updateNbRenderedTriangle();
 
         }
 
@@ -128,7 +148,6 @@ public class Pipeline {
     public Matrix getViewMatrix() {
         return viewMatrix;
     }
-
 
     public List<Triangle> getProcessedTriangle() {
         return processedTriangle;

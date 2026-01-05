@@ -36,17 +36,10 @@ public class Matrix {
         }
     }
 
-    public void rotateBasisInPlace(Vector3D[] localAxes) {
-        for (int i = 0; i<3; i++) {
-            localAxes[i] = localAxes[i].transformInPlace(this);
-            localAxes[i].normalizeInPlace();
-        }
-    }
-
     public static Matrix createProjectionMatrix(double far, double near, double fov, int width, int height, double zoom) {
         double q = far / (far - near);
         double aspectRatio = (double) width / height;
-        double scalingFactorRad = zoom / tan(fov * 0.5 / 180 * Math.PI);
+        double scalingFactorRad = zoom / tan((fov * 0.5 * Math.PI) / 180 );
 
         double[][] matProj = new double[4][4];
         matProj[0][0] = scalingFactorRad * aspectRatio;
@@ -61,16 +54,16 @@ public class Matrix {
     }
 
     public static Matrix createEulerRotation(double theta, double phi, double psi) {
-        Matrix matRotX = Matrix.createRotationZ(theta);
+        Matrix matRotX = Matrix.createRotationX(theta);
         Matrix matRotY = Matrix.createRotationY(phi);
-        Matrix matRotZ = Matrix.createRotationX(psi);
+        Matrix matRotZ = Matrix.createRotationZ(psi);
 
         return matRotX.multiply(matRotY).multiply(matRotZ);
     }
 
     public static Matrix createWorldTransformMatrix(double sx, double sy, double sz, double theta, double phi, double psi, double x, double y, double z) {
-        Matrix matScaling     = Matrix.createScaling(sx, sy, sz);
-        Matrix matRotation = Matrix.createEulerRotation(theta,phi,psi);
+        Matrix matScaling     = Matrix.createScalingMatrix(sx, sy, sz);
+        Matrix matRotation    = Matrix.createEulerRotation(theta,phi,psi);
         Matrix matTranslation = Matrix.createTranslation(x,y,z);
 
         return matScaling.multiply(matRotation).multiply(matTranslation);
@@ -118,7 +111,15 @@ public class Matrix {
         return this;
     }
 
-    public static Matrix createScaling(double x, double y, double z) {
+    public double getDeterminant() {
+        double[][] m = this.matrix;
+
+        return  m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+                m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    }
+
+    public static Matrix createScalingMatrix(double x, double y, double z) {
         Matrix scalingMatrix = Matrix.createIdentity(4, 4);
         double[][] mat = scalingMatrix.getMatrix();
 
@@ -211,22 +212,22 @@ public class Matrix {
         return new Matrix(matRotationAxis);
     }
 
-    public Matrix multiply(Matrix matIn2) {
+    public Matrix multiply(Matrix matIn) {
         double[][] mat1 = this.getMatrix();
-        double[][] mat2 = matIn2.getMatrix();
-        double[][] matResult = new double[4][4];
+        double[][] mat2 = matIn.getMatrix();
+        double[][] matOut = new double[4][4];
 
         for (int i = 0; i < 4; i++) {
             double[] row = mat1[i];
             for (int j = 0; j < 4; j++) {
-                matResult[i][j] = row[0] * mat2[0][j]
+                matOut[i][j] = row[0] * mat2[0][j]
                                 + row[1] * mat2[1][j]
                                 + row[2] * mat2[2][j]
                                 + row[3] * mat2[3][j];
             }
         }
 
-        return new Matrix(matResult);
+        return new Matrix(matOut);
     }
 
     public static Matrix createTranslation(double x, double y, double z) {

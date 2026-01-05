@@ -37,7 +37,7 @@ public class GameObject {
     }
 
     public void setPosition(double x, double y, double z) {
-        this.position = new Vector3D(x, y, z);
+        this.position = new Vector3D(-x, y, z);
         this.isDirty = true;
     }
 

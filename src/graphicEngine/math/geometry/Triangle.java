@@ -38,9 +38,6 @@ public class Triangle {
         this(verts[0], verts[1], verts[2], color);
     }
 
-    public Triangle(Triangle other) {
-           this(other.getVertices(),other.color);
-    }
 
     public void copyFrom(Triangle other) {
         this.vertices[0].copyFrom(other.vertices[0]);
@@ -123,8 +120,9 @@ public class Triangle {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
+
+
     public Triangle convertToWindowSpace(int iWinWidth, int iWinHeight) {
-        Vertex3D[] vertsIn = this.getVertices();
         // X/Y Inverted so need to put them back???
         this.scaleInPlaceX(-1);
         this.scaleInPlaceY(-1);
@@ -153,12 +151,16 @@ public class Triangle {
         this.transformed(worldTransformMatrix);
     }
 
-    public boolean isFacing(Camera camera) {
+    public boolean isFacing(Camera camera, boolean isFlipped) {
         // Casting the ray of the camera
         Vector3D vCameraRay = this.getVertices()[0].sub(camera.getCameraPosition());
 
         // Checking if the ray of the camera is in sight of the normale
-        return (this.getNormal().dotProduct(vCameraRay) < 0);
+        if (isFlipped) {
+            return (this.getNormal().dotProduct(vCameraRay) > 0);
+        } else {
+            return (this.getNormal().dotProduct(vCameraRay) < 0);
+        }
     }
 
     public void updateNormal() {
@@ -175,10 +177,15 @@ public class Triangle {
         setColor(new Color(v, v, v));
     }
 
-    public void setLighting(Vector3D lightDirection) {
+    public void setLighting(Vector3D lightDirection, boolean isFlipped) {
         lightDirection.normalizeInPlace();
 
-        double dpLightNorm = this.getNormal().dotProduct(lightDirection);
+        double dpLightNorm;
+        if (isFlipped) {
+            dpLightNorm = this.getNormal().scaleInPlace(-1).dotProduct(lightDirection);
+        } else {
+            dpLightNorm = this.getNormal().dotProduct(lightDirection);
+        }
         this.grayScale(dpLightNorm);
     }
 

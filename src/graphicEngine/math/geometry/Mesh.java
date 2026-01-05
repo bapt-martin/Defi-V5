@@ -11,15 +11,6 @@ public class Mesh {
         this.meshTriangle = new ArrayList<>();
     }
 
-    public Mesh(String meshName) {
-        this();
-        this.meshName = meshName;
-    }
-
-    public Mesh(List<Triangle> meshTriangle) {
-        this.meshTriangle = new ArrayList<>(meshTriangle);
-    }
-
     public void triConstruct(List<int[]> indicesFaces, List<Vertex3D> vertices) {
         List<Triangle> meshTriangle = this.getMeshTriangle();
 

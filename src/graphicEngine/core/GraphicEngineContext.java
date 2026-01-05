@@ -1,9 +1,10 @@
 package graphicEngine.core;
 
 import graphicEngine.math.geometry.Vertex3D;
+import graphicEngine.renderer.Camera;
 
-public class EngineContext {
-    private final Engine3D engine3D;
+public class GraphicEngineContext {
+    private final GraphicEngine graphicEngine;
 
     private int windowWidth;
     private int windowHeight;
@@ -16,9 +17,11 @@ public class EngineContext {
     private double lastFrameDuration;
     private double elapsedTime = 0;
 
+    private Camera camera;
 
-    public EngineContext(Engine3D engine3D, int windowWidth, int windowHeight) {
-        this.engine3D = engine3D;
+
+    public GraphicEngineContext(GraphicEngine graphicEngine, int windowWidth, int windowHeight) {
+        this.graphicEngine = graphicEngine;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.nbTriRenderPerFrame = 0;
@@ -26,9 +29,9 @@ public class EngineContext {
     }
 
     public void updateWindowInformation() {
-        this.windowPosition = new Vertex3D(engine3D.getLocationOnScreen());
-        this.windowWidth = engine3D.getWidth();
-        this.windowHeight = engine3D.getHeight();
+        this.windowPosition = new Vertex3D(graphicEngine.getLocationOnScreen());
+        this.windowWidth = graphicEngine.getWidth();
+        this.windowHeight = graphicEngine.getHeight();
     }
 
     public void updateTimeInformation() {
@@ -50,16 +53,8 @@ public class EngineContext {
         return windowWidth;
     }
 
-    public void setWindowWidth(int windowWidth) {
-        this.windowWidth = windowWidth;
-    }
-
     public int getWindowHeight() {
         return windowHeight;
-    }
-
-    public void setWindowHeight(int windowHeight) {
-        this.windowHeight = windowHeight;
     }
 
     public int getNbTriRenderPerFrame() {
@@ -70,43 +65,23 @@ public class EngineContext {
         this.nbTriRenderPerFrame = nbTriRenderPerFrame;
     }
 
-    public long getStartFrameTime() {
-        return startFrameTime;
-    }
-
-    public void setStartFrameTime(long startFrameTime) {
-        this.startFrameTime = startFrameTime;
-    }
-
-    public long getLastFrameTime() {
-        return lastFrameTime;
-    }
-
-    public void setLastFrameTime(long lastFrameTime) {
-        this.lastFrameTime = lastFrameTime;
-    }
-
     public double getLastFrameDuration() {
         return lastFrameDuration;
-    }
-
-    public void setLastFrameDuration(double lastFrameDuration) {
-        this.lastFrameDuration = lastFrameDuration;
-    }
-
-    public double getElapsedTime() {
-        return elapsedTime;
-    }
-
-    public void setElapsedTime(double elapsedTime) {
-        this.elapsedTime = elapsedTime;
     }
 
     public Vertex3D getWindowPosition() {
         return windowPosition;
     }
 
-    public void setWindowPosition(Vertex3D windowPosition) {
-        this.windowPosition = windowPosition;
+    public GraphicEngine getGraphicEngine() {
+        return graphicEngine;
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
     }
 }

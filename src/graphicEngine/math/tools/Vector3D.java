@@ -13,6 +13,13 @@ public class Vector3D extends Tuple3D{
         super(tuple3D);
     }
 
+    public static void rotateBasisInPlace(Matrix matrix, Vector3D[] localAxes) {
+        for (int i = 0; i<3; i++) {
+            localAxes[i].transformInPlace(matrix);
+            localAxes[i].normalizeInPlace();
+        }
+    }
+
     @Override
     public Vector3D crossProduct(Tuple3D other) {
         return new Vector3D(super.crossProduct(other));

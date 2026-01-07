@@ -27,8 +27,8 @@ public class Camera {
 
 
     public Camera(GraphicEngineContext graphicEngineContext) {
-        this.cameraPosition = new Vertex3D(0, 10, 25);
-        this.cameraRotation = new CameraRotation(0,0,0);
+        this.cameraPosition = new Vertex3D(0, 4, 25);
+        this.cameraRotation = new CameraRotation(0, 0, 0);
         this.cameraDirection = new Vector3D(0, 0, 1);
         this.cameraUp = new Vector3D(0, 1, 0);
         this.cameraRight = new Vector3D(1, 0, 0);
@@ -47,7 +47,7 @@ public class Camera {
         this.fov = fov;
     }
 
-    public class CameraRotation {
+    public static class CameraRotation {
         public double yaw;
         public double pitch;
         public double roll;
@@ -99,6 +99,7 @@ public class Camera {
 
     public void translateCameraInPlace(Vector3D translationDirection, int sens, double translationSpeed, double deltaFrameTime) {
         translationDirection.scaleInPlace(sens * deltaFrameTime * translationSpeed);
+
         this.cameraPosition.translateInPlace(translationDirection);
     }
 

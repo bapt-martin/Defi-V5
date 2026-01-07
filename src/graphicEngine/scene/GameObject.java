@@ -8,12 +8,14 @@ public class GameObject {
     private Mesh mesh;
     private Matrix worldTransformMatrix;
     private String name;
+    private int id;
 
     private Vector3D scale;
     private Vector3D rotation;
     private Vector3D position;
 
     private boolean isDirty = true;
+    private boolean isRendered = true;
 
     public GameObject(Mesh mesh) {
         this.mesh = mesh;
@@ -69,6 +71,7 @@ public class GameObject {
 
     public void setWorldTransformMatrix(Matrix worldTransformMatrix) {
         this.worldTransformMatrix = worldTransformMatrix;
+        isDirty = false;
     }
 
     public String getName() {
@@ -79,5 +82,19 @@ public class GameObject {
         this.name = name;
     }
 
+    public boolean isRendered() {
+        return isRendered;
+    }
 
+    public void setRendered(boolean rendered) {
+        isRendered = rendered;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 }

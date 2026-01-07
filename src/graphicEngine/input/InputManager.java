@@ -1,6 +1,7 @@
 package graphicEngine.input;
 
 import graphicEngine.core.GraphicEngineContext;
+import graphicEngine.math.tools.Vector3D;
 import graphicEngine.renderer.Camera;
 import graphicEngine.core.GraphicEngine;
 import graphicEngine.math.geometry.Vertex3D;
@@ -59,9 +60,44 @@ public class InputManager {
         double translationCameraSpeed = camera.getdTranslationCameraSpeed();
         double rotationCameraSpeed    = camera.getdRotationCameraSpeed();
 
-        this.handleTranslation(deltaFrameTime, translationCameraSpeed);
+        this.handleMovement(deltaFrameTime, translationCameraSpeed);
         this.handleRotation(deltaFrameTime, rotationCameraSpeed);
+    }
 
+    public void handleMovement(double deltaFrameTime, double translationCameraSpeed) {
+        double xDir = 0; // Strafe
+        double zDir = 0; // Forward
+        double yDir = 0; // Fly
+
+        if (keyboardInput.getKeysPressed()[KeyEvent.VK_Z]) zDir += 1; // Forward
+        if (keyboardInput.getKeysPressed()[KeyEvent.VK_S]) zDir -= 1; // Backward
+        if (keyboardInput.getKeysPressed()[KeyEvent.VK_Q]) xDir -= 1; // Left strafe
+        if (keyboardInput.getKeysPressed()[KeyEvent.VK_D]) xDir += 1; // Right strafe
+
+        if (keyboardInput.getKeysPressed()[KeyEvent.VK_SPACE]) {
+            if (keyboardInput.getKeysPressed()[KeyEvent.VK_SHIFT]) {
+                yDir -= 1; // Down
+            } else {
+                yDir += 1; // Up
+            }
+        }
+
+        if (xDir == 0 && yDir == 0 && zDir == 0) return;
+
+
+        Vector3D moveX = new Vector3D(camera.getCameraRight());
+        moveX.scaleInPlace(xDir);
+
+        Vector3D moveZ = new Vector3D(camera.getCameraDirection());
+        moveZ.scaleInPlace(zDir);
+
+        Vector3D moveY = new Vector3D(camera.getCameraUp());
+        moveY.scaleInPlace(yDir);
+
+        Vector3D totalTranslation = moveX.add(moveZ).add(moveY);
+        totalTranslation.normalizeInPlace();
+
+        camera.translateCameraInPlace(totalTranslation, 1, translationCameraSpeed, deltaFrameTime);
     }
 
     public void handleRotation(double deltaFrameTime, double rotationCameraSpeed) {
@@ -112,7 +148,7 @@ public class InputManager {
         this.handleUp(deltaFrameTime, translationCameraSpeed);
     }
 
-    public void handleForward(double deltaFrameTime, double translationCameraSpeed) {
+    public void handleRight(double deltaFrameTime, double translationCameraSpeed) {
         // Q = Left
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_Q]) {
             camera.translateCameraInPlace(camera.getCameraRight(), -1, translationCameraSpeed, deltaFrameTime);
@@ -123,7 +159,7 @@ public class InputManager {
         }
     }
 
-    public void handleRight(double deltaFrameTime, double translationCameraSpeed) {
+    public void handleForward(double deltaFrameTime, double translationCameraSpeed) {
         // Z = Forward
         if (keyboardInput.getKeysPressed()[KeyEvent.VK_Z]) {
             camera.translateCameraInPlace(camera.getCameraDirection(), 1, translationCameraSpeed, deltaFrameTime);

@@ -62,6 +62,10 @@ public class Pipeline {
 
         List<GameObject> renderQueue = scene.getRenderQueue();
         for (GameObject gameObject : renderQueue) {
+            if(!gameObject.isRendered()) {
+                return;
+            }
+
             this.processGameObject(width, height, projectionMatrix, frontClippingPlane, lightDirection, gameObject);
         }
     }

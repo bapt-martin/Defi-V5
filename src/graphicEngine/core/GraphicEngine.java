@@ -1,6 +1,7 @@
 package graphicEngine.core;
 
 import graphicEngine.input.InputManager;
+import graphicEngine.math.tools.Matrix;
 import graphicEngine.overlay.HeadUpDisplay;
 import graphicEngine.renderer.Camera;
 import graphicEngine.renderer.Pipeline;
@@ -40,44 +41,55 @@ public class GraphicEngine extends JPanel implements Runnable {
         this.scene = new Scene();
 
         this.scene.loadMeshes(
-                List.of(
-            new Scene.MeshData("teapot","obj model\\teapot.obj"),
-            new Scene.MeshData("axis","obj model\\axis.obj")
+                List.of(new Scene.MeshData("teapot","obj model\\teapot.obj"),
+                        new Scene.MeshData("axis","obj model\\axis.obj"),
+                        new Scene.MeshData("cube","obj model\\cube.obj")
         ));
 
-        this.scene.addMultipleGameObject(
-                List.of(
-            new Scene.ObjectData("teapot1", "teapot"),
-            new Scene.ObjectData("teapot2", "teapot"),
-            new Scene.ObjectData("teapot3", "teapot"),
-            new Scene.ObjectData("teapot4", "teapot"),
-            new Scene.ObjectData("axis1", "axis")
+        this.scene.addMultipleGameObjects(
+                List.of(new Scene.ObjectData("teapot1", "teapot"),
+                        new Scene.ObjectData("teapot2", "teapot"),
+                        new Scene.ObjectData("teapot3", "teapot"),
+                        new Scene.ObjectData("teapot4", "teapot"),
+                        new Scene.ObjectData("axis1",   "axis"),
+                        new Scene.ObjectData("cube1",   "cube")
+
         ));
 
-        scene.getGameObject("axis1").setPosition(0, 0, 0);
-        scene.getGameObject("axis1").setScale(-1, 1, 1);
+        scene.getGameObject(4).setPosition(0, 0, 0);
+        scene.getGameObject(4).setScale(-1, 1, 1);
+        scene.getGameObject(4).setRendered(true);
 
-        GameObject t1 = scene.getGameObject("teapot1");
+
+        scene.getGameObject(5).setPosition(0, 0, 0);
+        scene.getGameObject(5).setRendered(true);
+
+
+        GameObject t1 = scene.getGameObject(0);
         t1.setPosition(-6, 0, 8);
         t1.setRotation(0, 0, 0);
         t1.setScale(1, 1, 1);
+        t1.setRendered(true);
 
-        GameObject t2 = scene.getGameObject("teapot2");
+        GameObject t2 = scene.getGameObject(1);
         t2.setPosition(6, 0, 8);
         t2.setRotation(45, 0, 0);
         t2.setScale(1.5, 1.5, 1.5);
+        t2.setRendered(true);
 
-        GameObject t3 = scene.getGameObject("teapot3");
+        GameObject t3 = scene.getGameObject(2);
         t3.setPosition(0, 5, 8);
         t3.setRotation(0, 0, 180);
         t3.setScale(0.5, 0.5, 0.5);
+        t3.setRendered(true);
 
-        GameObject t4 = scene.getGameObject("teapot4");
+        GameObject t4 = scene.getGameObject(3);
         t4.setPosition(0, -5, 8);
         t4.setRotation(-45, 45, 0);
         t4.setScale(2, 0.6, 1.2);
+        t4.setRendered(true);
 
-        this.timeLoop = new Timer(16, e -> repaint());
+        this.timeLoop = new Timer(1, e -> repaint());
 
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
         this.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -140,6 +152,22 @@ public class GraphicEngine extends JPanel implements Runnable {
 
     public GraphicEngineContext getEngineContext() {
         return graphicEngineContext;
+    }
+
+    public void setWorldTransformMatrices(List<Integer> objectsId, List<Matrix> worldTransformMatrices) {
+        this.scene.setWorldTransformMatrices(objectsId, worldTransformMatrices);
+    }
+
+    public void setObjectsVisibility(List<Integer> objectsId, List<Boolean> renderedStatus) {
+        this.scene.setObjectsVisibility(objectsId, renderedStatus);
+    }
+
+    public void addMultipleGameObjects(List<Scene.ObjectData> objectReferences) {
+        this.scene.addMultipleGameObjects(objectReferences);
+    }
+
+    public List<Scene.IdSwap> removeMultipleGameObjects(List<Integer> indexList) {
+        return this.scene.removeMultipleGameObject(indexList);
     }
 
     public Camera getCamera() {

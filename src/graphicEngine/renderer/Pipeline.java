@@ -34,10 +34,6 @@ public class Pipeline {
 
     }
 
-    public void updateViewMatrix() {
-        this.viewMatrix = Matrix.createViewMatrix(this.camera.getCameraPosition(), this.camera.getCameraDirection(), this.camera.getCameraUp());
-    }
-
     public void execution(Graphics g) {
         this.updateViewMatrix();
 
@@ -47,6 +43,10 @@ public class Pipeline {
 
         this.rasterizePass(g);
 
+    }
+
+    public void updateViewMatrix() {
+        this.viewMatrix = Matrix.createViewMatrix(this.camera.getCameraPosition(), this.camera.getCameraDirection(), this.camera.getCameraUp());
     }
 
     public void processAllGeometry() {
@@ -63,7 +63,7 @@ public class Pipeline {
         List<GameObject> renderQueue = scene.getRenderQueue();
         for (GameObject gameObject : renderQueue) {
             if(!gameObject.isRendered()) {
-                return;
+                continue;
             }
 
             this.processGameObject(width, height, projectionMatrix, frontClippingPlane, lightDirection, gameObject);
@@ -123,7 +123,7 @@ public class Pipeline {
             this.drawBatch(graphicEngineContext, g);
         }
 
-        System.out.println("nb tris :" + graphicEngineContext.getNbTriRenderPerFrame() + ", frame duration : " + graphicEngineContext.getLastFrameDuration());
+        System.out.println("nb tris :" + graphicEngineContext.getNbTriRenderPerFrame());
     }
 
     public void clipToScreen(int iWinWidth, int iWinHeight, Triangle triToClip) {
@@ -144,7 +144,6 @@ public class Pipeline {
             triToDraw.drawTriangle(g, false);
 
             graphicEngineContext.updateNbRenderedTriangle();
-
         }
 
     }

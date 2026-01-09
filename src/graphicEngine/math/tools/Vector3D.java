@@ -73,6 +73,12 @@ public class Vector3D extends Tuple3D{
         return new Vector3D(this.x + other.x, this.y + other.y, this.z + other.z);
     }
 
+    public void addInPlace(Tuple3D other) {
+        this.x += other.x;
+        this.y += other.y;
+        this.z += other.z;
+    }
+
     @Override
     public Vector3D sub(Tuple3D other) {
         return new Vector3D(this.x - other.x, this.y - other.y, this.z - other.z);

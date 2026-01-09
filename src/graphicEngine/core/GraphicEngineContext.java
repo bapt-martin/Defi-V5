@@ -12,10 +12,11 @@ public class GraphicEngineContext {
 
     private int nbTriRenderPerFrame;
 
-    private long startFrameTime = System.nanoTime();
-    private long lastFrameTime = System.nanoTime();
-    private double lastFrameDuration;
+    private double deltaTime;
     private double elapsedTime = 0;
+
+    private final int UPS_TARGET = 60;
+    private final int FPS_TARGET = 60;
 
     private Camera camera;
 
@@ -24,21 +25,18 @@ public class GraphicEngineContext {
         this.graphicEngine = graphicEngine;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
+        this.windowPosition = new Vertex3D(0, 0, 0);
         this.nbTriRenderPerFrame = 0;
-        this.lastFrameDuration = 0.1;
+        this.deltaTime = 0.1;
     }
 
     public void updateWindowInformation() {
-        this.windowPosition = new Vertex3D(graphicEngine.getLocationOnScreen());
+        if (graphicEngine.isShowing()) {
+            Vertex3D location = new Vertex3D(graphicEngine.getLocationOnScreen().x, graphicEngine.getLocationOnScreen().y, 0);
+            this.windowPosition = new Vertex3D(location.x, location.y, 0);
+        }
         this.windowWidth = graphicEngine.getWidth();
         this.windowHeight = graphicEngine.getHeight();
-    }
-
-    public void updateTimeInformation() {
-        long now = System.nanoTime();
-        elapsedTime = (now - startFrameTime) / 1_000_000_000.0;
-        lastFrameDuration = (now - lastFrameTime) / 1_000_000_000.0;
-        lastFrameTime = now;
     }
 
     public void updateNbRenderedTriangle() {
@@ -65,8 +63,8 @@ public class GraphicEngineContext {
         this.nbTriRenderPerFrame = nbTriRenderPerFrame;
     }
 
-    public double getLastFrameDuration() {
-        return lastFrameDuration;
+    public double getDeltaTime() {
+        return deltaTime;
     }
 
     public Vertex3D getWindowPosition() {
@@ -83,5 +81,25 @@ public class GraphicEngineContext {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+    }
+
+    public void setDeltaTime(double deltaTime) {
+        this.deltaTime = deltaTime;
+    }
+
+    public double getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public void setElapsedTime(double elapsedTime) {
+        this.elapsedTime = elapsedTime;
+    }
+
+    public int getUPS_TARGET() {
+        return UPS_TARGET;
+    }
+
+    public int getFPS_TARGET() {
+        return FPS_TARGET;
     }
 }

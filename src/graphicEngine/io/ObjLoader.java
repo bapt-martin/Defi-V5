@@ -55,7 +55,6 @@ public abstract class ObjLoader {
                             indicesFaces.add(new int[]{i1,i2,i3});
                         }
                         default -> {
-                            // nothing ignore other lines
                         }
                     }
                 }

@@ -10,16 +10,22 @@ import graphicEngine.scene.Scene;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferStrategy;
 import java.util.List;
 
-public class GraphicEngine extends JPanel implements Runnable {
+public class GraphicEngine extends Canvas implements Runnable {
+    private Thread gameThread;
     private final Camera camera;
     private final InputManager inputManager;
     private final HeadUpDisplay headUpDisplay;
     private final Pipeline pipeline;
     private final Scene scene;
     private final GraphicEngineContext graphicEngineContext;
-    private final Timer timeLoop;
+
+    private double angleTheta = 0;
+    private double anglePhi = 0;
+
+    private boolean isRunning;
 
     public GraphicEngine(int widthInit, int heightInit) {
         this.graphicEngineContext = new GraphicEngineContext(this, widthInit, heightInit);
@@ -34,6 +40,8 @@ public class GraphicEngine extends JPanel implements Runnable {
         this.setFocusable(true);
 //        this.setFocusTraversalKeysEnabled(false);
         this.requestFocusInWindow();
+
+        this.graphicEngineContext.setCamera(this.camera);
 
         this.inputManager = new InputManager(this,camera);
         inputManager.attachTo(this);
@@ -52,7 +60,9 @@ public class GraphicEngine extends JPanel implements Runnable {
                         new Scene.ObjectData("teapot3", "teapot"),
                         new Scene.ObjectData("teapot4", "teapot"),
                         new Scene.ObjectData("axis1",   "axis"),
-                        new Scene.ObjectData("cube1",   "cube")
+                        new Scene.ObjectData("cube1",   "cube"),
+                        new Scene.ObjectData("teapot5", "teapot"),
+                        new Scene.ObjectData("teapot6", "teapot")
 
         ));
 
@@ -63,6 +73,9 @@ public class GraphicEngine extends JPanel implements Runnable {
 
         scene.getGameObject(5).setPosition(0, 0, 0);
         scene.getGameObject(5).setRendered(true);
+
+        scene.getGameObject(6).setRendered(false);
+        scene.getGameObject(7).setRendered(false);
 
 
         GameObject t1 = scene.getGameObject(0);
@@ -89,14 +102,9 @@ public class GraphicEngine extends JPanel implements Runnable {
         t4.setScale(2, 0.6, 1.2);
         t4.setRendered(true);
 
-        this.timeLoop = new Timer(1, e -> repaint());
 
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
-        this.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        this.add(headUpDisplay);
 
-
-        this.graphicEngineContext.setCamera(this.camera);
         this.pipeline = new Pipeline(camera, scene, graphicEngineContext);
         this.repaint();
     }
@@ -105,36 +113,133 @@ public class GraphicEngine extends JPanel implements Runnable {
     public void addNotify() {
         super.addNotify();
 
+        this.start();
+
         SwingUtilities.invokeLater(() -> {
+            this.graphicEngineContext.updateWindowInformation();
+            this.createBufferStrategy(3);
+            this.requestFocusInWindow();
             inputManager.centerMouse();
-            timeLoop.start();
-            requestFocusInWindow();
         });
+    }
+
+    public synchronized void start() {
+        if (isRunning) return;
+        isRunning = true;
+        gameThread = new Thread(this, "EngineThread");
+        gameThread.start();
+    }
+
+    public synchronized void stop() {
+        isRunning = false;
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void run() {
+        this.graphicEngineContext.updateWindowInformation();
 
+        double deltaU = 0;
+
+        int frames = 0;
+        int ticks = 0;
+        long timer = System.currentTimeMillis();
+
+        long startTime = System.nanoTime();
+        long previousTime = startTime;
+
+
+        while (isRunning) {
+            long currentTime = System.nanoTime();
+
+            double deltaTime = (currentTime - previousTime) / 1_000_000_000.0;
+            graphicEngineContext.setDeltaTime(deltaTime);
+
+            double elapsedTime = (currentTime - startTime) / 1_000_000_000.0;
+            graphicEngineContext.setElapsedTime(elapsedTime);
+
+            deltaU += deltaTime * graphicEngineContext.getUPS_TARGET();
+
+            previousTime = currentTime;
+
+            boolean needsRender = false;
+            while (deltaU >= 1) {
+                this.update();
+                ticks++;
+                deltaU--;
+                needsRender = true;
+            }
+
+            if (needsRender) {
+                this.render();
+                frames++;
+            }
+
+            if (System.currentTimeMillis() - timer > 1000) {
+                timer += 1000;
+                System.out.println("UPS: " + ticks + ", FPS: " + frames);
+                frames = 0;
+                ticks = 0;
+            }
+        }
     }
 
-    //START OF THE PIPELINE
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        this.graphicEngineContext.resetNbRenderedTriangle();
-
-        // Real time aspect actualisation
-        camera.updateWindowProjectionMatrix();
-
+    private void update() {
         inputManager.handleKeyPress();
 //        inputManager.handleMouseWheelInput();
 
+        camera.updateWindowProjectionMatrix();
         camera.updateCamReferentialMatrix();
         camera.updateProjectionMatrix();
 
+        scene.getGameObject(1).rotate(10,0,0);
+        scene.getGameObject(2).rotate(0,5,5);
+        scene.getGameObject(3).rotate(7,5,3);
+        scene.getGameObject(5).rotate(2,2,2);
+
+
+        angleTheta += 0.05;
+        anglePhi += 0.01;
+
+        double r = 5.0;
+
+        double y = r * Math.sin(anglePhi);
+        double hR = r * Math.cos(anglePhi);
+        double x = hR * Math.cos(angleTheta);
+        double z = hR * Math.sin(angleTheta);
+
+        scene.getGameObject(5).setPosition(x, y, z);
+
+        headUpDisplay.updateStats();
+    }
+
+    private void render() {
+        BufferStrategy bs = this.getBufferStrategy();
+
+        if (bs == null) {
+            this.createBufferStrategy(3);
+            return;
+        }
+
+        Graphics g = bs.getDrawGraphics();
+
+        g.setColor(this.getBackground());
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        camera.updateWindowProjectionMatrix();
+        camera.updateProjectionMatrix();
+
+        graphicEngineContext.resetNbRenderedTriangle();
         pipeline.execution(g);
 
-        headUpDisplay.update();
+        headUpDisplay.draw(g);
+
+        g.dispose();
+        bs.show();
     }
 
     public static void main(String[] args) {

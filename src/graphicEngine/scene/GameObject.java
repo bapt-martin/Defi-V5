@@ -39,7 +39,7 @@ public class GameObject {
     }
 
     public void setPosition(double x, double y, double z) {
-        this.position = new Vector3D(-x, y, z);
+        this.position = new Vector3D(x, y, z);
         this.isDirty = true;
     }
 
@@ -49,7 +49,12 @@ public class GameObject {
     }
 
     public void move(double dx, double dy, double dz) {
-        this.position = this.position.add(new Vector3D(dx, dy, dz));
+        this.position.addInPlace(new Vector3D(dx, dy, dz));
+        this.isDirty = true;
+    }
+
+    public void rotate(double rx, double ry, double rz) {
+        this.rotation.addInPlace(new Vector3D(rx, ry, rz));
         this.isDirty = true;
     }
 

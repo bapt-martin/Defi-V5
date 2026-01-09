@@ -56,7 +56,7 @@ public class InputManager {
     }
 
     public void handleKeyPress() {
-        double deltaFrameTime = graphicEngineContext.getLastFrameDuration();
+        double deltaFrameTime = 1.0/60;
         double translationCameraSpeed = camera.getdTranslationCameraSpeed();
         double rotationCameraSpeed    = camera.getdRotationCameraSpeed();
 

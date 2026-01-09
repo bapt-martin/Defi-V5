@@ -122,8 +122,6 @@ public class Pipeline {
 
             this.drawBatch(graphicEngineContext, g);
         }
-
-        System.out.println("nb tris :" + graphicEngineContext.getNbTriRenderPerFrame());
     }
 
     public void clipToScreen(int iWinWidth, int iWinHeight, Triangle triToClip) {

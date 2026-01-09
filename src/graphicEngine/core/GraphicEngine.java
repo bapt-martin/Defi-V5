@@ -22,6 +22,9 @@ public class GraphicEngine extends Canvas implements Runnable {
     private final Scene scene;
     private final GraphicEngineContext graphicEngineContext;
 
+    private int currentFPS = 0;
+    private int currentUPS = 0;
+
     private double angleTheta = 0;
     private double anglePhi = 0;
 
@@ -88,19 +91,19 @@ public class GraphicEngine extends Canvas implements Runnable {
         t2.setPosition(6, 0, 8);
         t2.setRotation(45, 0, 0);
         t2.setScale(1.5, 1.5, 1.5);
-        t2.setRendered(true);
+        t2.setRendered(false);
 
         GameObject t3 = scene.getGameObject(2);
         t3.setPosition(0, 5, 8);
         t3.setRotation(0, 0, 180);
         t3.setScale(0.5, 0.5, 0.5);
-        t3.setRendered(true);
+        t3.setRendered(false);
 
         GameObject t4 = scene.getGameObject(3);
         t4.setPosition(0, -5, 8);
         t4.setRotation(-45, 45, 0);
         t4.setScale(2, 0.6, 1.2);
-        t4.setRendered(true);
+        t4.setRendered(false);
 
 
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
@@ -145,8 +148,6 @@ public class GraphicEngine extends Canvas implements Runnable {
 
         double deltaU = 0;
 
-        int frames = 0;
-        int ticks = 0;
         long timer = System.currentTimeMillis();
 
         long startTime = System.nanoTime();
@@ -169,28 +170,30 @@ public class GraphicEngine extends Canvas implements Runnable {
             boolean needsRender = false;
             while (deltaU >= 1) {
                 this.update();
-                ticks++;
+                currentUPS++;
                 deltaU--;
                 needsRender = true;
             }
 
             if (needsRender) {
                 this.render();
-                frames++;
+                currentFPS++;
             }
 
             if (System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
-                System.out.println("UPS: " + ticks + ", FPS: " + frames);
-                frames = 0;
-                ticks = 0;
+
+                graphicEngineContext.setCurrentUPS(currentUPS);
+                graphicEngineContext.setCurrentUPS(currentUPS);
+
+                currentUPS = 0;
+                currentFPS = 0;
             }
         }
     }
 
     private void update() {
         inputManager.handleKeyPress();
-//        inputManager.handleMouseWheelInput();
 
         camera.updateWindowProjectionMatrix();
         camera.updateCamReferentialMatrix();
@@ -199,19 +202,24 @@ public class GraphicEngine extends Canvas implements Runnable {
         scene.getGameObject(1).rotate(10,0,0);
         scene.getGameObject(2).rotate(0,5,5);
         scene.getGameObject(3).rotate(7,5,3);
-        scene.getGameObject(5).rotate(2,2,2);
 
 
-        angleTheta += 0.05;
+        angleTheta += 0.07;
         anglePhi += 0.01;
 
-        double r = 5.0;
+        double r = 11.0;
 
         double y = r * Math.sin(anglePhi);
         double hR = r * Math.cos(anglePhi);
         double x = hR * Math.cos(angleTheta);
         double z = hR * Math.sin(angleTheta);
 
+        double sX = 1.0 + (0.5 * Math.sin(anglePhi));
+        double sY = 1.0 + (0.5 * Math.sin(angleTheta));
+        double sZ = 1.0 + (0.5 * Math.cos(anglePhi));
+
+        scene.getGameObject(5).setScale(sX, sY, sZ);
+        scene.getGameObject(5).rotate(2,2,2);
         scene.getGameObject(5).setPosition(x, y, z);
 
         headUpDisplay.updateStats();
@@ -277,6 +285,14 @@ public class GraphicEngine extends Canvas implements Runnable {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public int getCurrentFPS() {
+        return currentFPS;
+    }
+
+    public int getCurrentUPS() {
+        return currentUPS;
     }
 }
 

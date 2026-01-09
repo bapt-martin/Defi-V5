@@ -11,6 +11,7 @@ import java.util.List;
 
 public class HeadUpDisplay {
     private String fpsText = "FPS: -";
+    private String upsText = "UPS: -";
     private String perfText = "Perf: -";
     private String positionText = "Pos: -";
     private String rotationText = "Rot: -";
@@ -18,7 +19,7 @@ public class HeadUpDisplay {
 
     private final List<Double> frameTimeHistory = new ArrayList<>();
     private final List<Integer> triCountHistory = new ArrayList<>();
-    private final int MAX_HISTORY = 380; // Largeur du graphique (pixels)
+    private final int MAX_HISTORY = 410;
 
     private Color perfColor = Color.WHITE;
 
@@ -32,6 +33,7 @@ public class HeadUpDisplay {
 
     public HeadUpDisplay(GraphicEngineContext graphicEngineContext) {
         this.graphicEngineContext = graphicEngineContext;
+
         for (int i = 0; i < MAX_HISTORY; i++) {
             frameTimeHistory.add(0.0);
             triCountHistory.add(0);
@@ -40,38 +42,55 @@ public class HeadUpDisplay {
 
     public void updateStats() {
         double now = graphicEngineContext.getElapsedTime();
-
         double deltaTime = graphicEngineContext.getDeltaTime();
-        int nbTri = graphicEngineContext.getNbTriRenderPerFrame();
 
-        frameTimeHistory.add(deltaTime * 1000);
-        if (frameTimeHistory.size() > MAX_HISTORY) frameTimeHistory.removeFirst();
+        this.captureFrameMetrics(deltaTime);
 
-        triCountHistory.add(nbTri);
-        if (triCountHistory.size() > MAX_HISTORY) triCountHistory.removeFirst();
-
+        this.updateTransform();
 
         if (now - lastUiUpdate < UI_UPDATE_INTERVAL) {
             return;
         }
         lastUiUpdate = now;
 
-
         if (deltaTime <= 0) return;
 
-        double currentFps = 1.0 / deltaTime;
+        this.updateFpsUps(deltaTime);
+        this.updatePerfScore(deltaTime);
+    }
 
+    private void captureFrameMetrics(double deltaTime) {
+        addToHistory(frameTimeHistory, deltaTime * 1000);
 
-        double score = ((1.0 / graphicEngineContext.getFPS_TARGET()) / deltaTime) * 100;
-
-        this.fpsText = String.format("FPS: %.0f", currentFps);
-
-        this.perfText = String.format("Perf: %.0f%% (%.1f ms)", score, deltaTime * 1000); // *1000 pour ms
-        this.perfColor = getScoreColor(score);
+        int nbTri = graphicEngineContext.getNbTriRenderPerFrame();
+        addToHistory(triCountHistory, nbTri);
 
         this.triText = String.format("Triangles: %d", nbTri);
+    }
 
-        this.updateTransform();
+    private <T> void addToHistory(List<T> list, T value) {
+        list.add(value);
+        if (list.size() > MAX_HISTORY) {
+            list.removeFirst();
+        }
+    }
+
+    public void updateFpsUps(double deltaTime) {
+        double currentFps = 1.0 / deltaTime;
+        if (currentFps > 10000) {
+            this.fpsText = "FPS: >10000";
+        } else {
+            this.fpsText = String.format("FPS: %.0f", currentFps);
+        }
+
+        this.upsText = String.format("UPS: %d", graphicEngineContext.getCurrentUPS());
+    }
+
+    public void updatePerfScore(double deltaTime) {
+        double rawScore = ((1.0 / graphicEngineContext.getFPS_TARGET()) / deltaTime) * 100;
+        double score = Math.min(200, rawScore);
+        this.perfText = String.format("Perf: %.0f%% (%.1f ms)", score, deltaTime * 1000); // *1000 pour ms
+        this.perfColor = getScoreColor(score);
     }
 
     public void updateTransform() {
@@ -107,27 +126,30 @@ public class HeadUpDisplay {
         g.setFont(font);
 
         g.setColor(backgroundColor);
-        g.fillRect(10, 10, 400, 155);
+        g.fillRect(10, 10, 440, 155);
 
         int startX = 25;
         int startY = 35;
         int lineHeight = 20;
 
-        g.setColor(Color.WHITE);
-        g.drawString(fpsText, startX, startY);
-
         g.setColor(perfColor);
-        g.drawString(perfText, startX + 80, startY);
+        g.drawString(perfText, startX, startY);
 
         g.setColor(Color.CYAN);
-        g.drawString(triText, startX + 250, startY);
+        g.drawString(triText, startX + 220, startY + 2 * lineHeight);
+
+        g.setColor(Color.WHITE);
+        g.drawString(fpsText, startX + 220, startY);
+
+        g.setColor(Color.WHITE);
+        g.drawString(upsText, startX + 220, startY + lineHeight);
 
         g.setColor(Color.WHITE);
         g.drawString(positionText, startX, startY + lineHeight);
 
         g.drawString(rotationText, startX, startY + (lineHeight * 2));
 
-        drawGraph(g, 20, 100, 380, 50);
+        drawGraph(g, 20, 100, MAX_HISTORY, 50);
     }
 
     private void drawGraph(Graphics g, int x, int y, int w, int h) {

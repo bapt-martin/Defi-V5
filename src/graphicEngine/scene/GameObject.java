@@ -58,6 +58,11 @@ public class GameObject {
         this.isDirty = true;
     }
 
+    public void scale(double sx, double sy, double sz) {
+        this.scale.addInPlace(new Vector3D(sx, sy, sz));
+        this.isDirty = true;
+    }
+
     public Mesh getMesh() {
         return mesh;
     }

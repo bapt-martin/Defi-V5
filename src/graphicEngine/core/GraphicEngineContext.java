@@ -14,6 +14,8 @@ public class GraphicEngineContext {
 
     private double deltaTime;
     private double elapsedTime = 0;
+    private int currentFPS = 0;
+    private int currentUPS = 0;
 
     private final int UPS_TARGET = 60;
     private final int FPS_TARGET = 60;
@@ -101,5 +103,21 @@ public class GraphicEngineContext {
 
     public int getFPS_TARGET() {
         return FPS_TARGET;
+    }
+
+    public int getCurrentFPS() {
+        return currentFPS;
+    }
+
+    public void setCurrentFPS(int currentFPS) {
+        this.currentFPS = currentFPS;
+    }
+
+    public int getCurrentUPS() {
+        return currentUPS;
+    }
+
+    public void setCurrentUPS(int currentUPS) {
+        this.currentUPS = currentUPS;
     }
 }

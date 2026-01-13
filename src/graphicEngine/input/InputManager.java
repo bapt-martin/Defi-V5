@@ -6,22 +6,24 @@ import graphicEngine.renderer.Camera;
 import graphicEngine.core.GraphicEngine;
 import graphicEngine.math.geometry.Vertex3D;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
 public class InputManager {
     private final GraphicEngineContext graphicEngineContext;
-    private GraphicEngine graphicEngine;
     private final Camera camera;
     private final KeyboardInput keyboardInput;
     private final MouseInput mouseInput;
     private final MouseMotionInput mouseMotionInput;
     private Robot robot;
+    private Point centerReference = new Point(0, 0);
+    private Point lastRobotPos = new Point(0, 0);
+    private boolean isFirstMove = true; // Pour éviter le saut au démarrage
 
     public InputManager(GraphicEngine graphicEngine, Camera camera) {
         this.graphicEngineContext = graphicEngine.getEngineContext();
         this.camera = camera;
-        this.graphicEngine = graphicEngine;
         this.keyboardInput = new KeyboardInput(this);
         this.mouseInput = new MouseInput(graphicEngine, this);
         this.mouseMotionInput = new MouseMotionInput(graphicEngineContext,this);
@@ -50,21 +52,28 @@ public class InputManager {
         this.mouseMotionInput.setWinLastMousePosition(coordinatesIn);
     }
 
-    public void centerMouse() {
-        Vertex3D winPanelCenter = new Vertex3D(graphicEngineContext.getWindowWidth()/2.0, graphicEngineContext.getWindowHeight()/2.0,0);
-        this.moveMouseWindow(winPanelCenter);
-    }
+//    public void centerMouse() {
+//        Component view = graphicEngineContext.getGraphicEngine();
+//        if (view == null || !view.isShowing()) return;
+//
+//        int centerX = view.getWidth() / 2;
+//        int centerY = view.getHeight() / 2;
+//
+//        Point globalCenter = new Point(centerX, centerY);
+//        SwingUtilities.convertPointToScreen(globalCenter, view);
+//
+//        robot.mouseMove(globalCenter.x, globalCenter.y);
+//    }
 
     public void handleKeyPress() {
-        double deltaFrameTime = 1.0/60;
         double translationCameraSpeed = camera.getdTranslationCameraSpeed();
         double rotationCameraSpeed    = camera.getdRotationCameraSpeed();
 
-        this.handleMovement(deltaFrameTime, translationCameraSpeed);
-        this.handleRotation(deltaFrameTime, rotationCameraSpeed);
+        this.handleTranslation(1.0/graphicEngineContext.getUPS_TARGET(), translationCameraSpeed);
+        this.handleRotation(1.0/graphicEngineContext.getUPS_TARGET(), rotationCameraSpeed);
     }
 
-    public void handleMovement(double deltaFrameTime, double translationCameraSpeed) {
+    public void handleTranslation(double deltaFrameTime, double translationCameraSpeed) {
         double xDir = 0; // Strafe
         double zDir = 0; // Forward
         double yDir = 0; // Fly
@@ -88,12 +97,12 @@ public class InputManager {
         Vector3D moveX = new Vector3D(camera.getCameraRight());
         moveX.scaleInPlace(xDir);
 
-        Vector3D moveZ = new Vector3D(camera.getCameraDirection());
-        moveZ.scaleInPlace(zDir);
-
         Vector3D moveY = new Vector3D(camera.getCameraUp());
         moveY.scaleInPlace(yDir);
 
+        Vector3D moveZ = new Vector3D(camera.getCameraDirection());
+        moveZ.scaleInPlace(zDir);
+        
         Vector3D totalTranslation = moveX.add(moveZ).add(moveY);
         totalTranslation.normalizeInPlace();
 
@@ -142,62 +151,41 @@ public class InputManager {
         }
     }
 
-    public void handleTranslation(double deltaFrameTime, double translationCameraSpeed) {
-        this.handleForward(deltaFrameTime, translationCameraSpeed);
-        this.handleRight(deltaFrameTime, translationCameraSpeed);
-        this.handleUp(deltaFrameTime, translationCameraSpeed);
-    }
-
-    public void handleRight(double deltaFrameTime, double translationCameraSpeed) {
-        // Q = Left
-        if (keyboardInput.getKeysPressed()[KeyEvent.VK_Q]) {
-            camera.translateCameraInPlace(camera.getCameraRight(), -1, translationCameraSpeed, deltaFrameTime);
-        }
-        // D = Right
-        if (keyboardInput.getKeysPressed()[KeyEvent.VK_D]) {
-            camera.translateCameraInPlace(camera.getCameraRight(), 1, translationCameraSpeed, deltaFrameTime);
-        }
-    }
-
-    public void handleForward(double deltaFrameTime, double translationCameraSpeed) {
-        // Z = Forward
-        if (keyboardInput.getKeysPressed()[KeyEvent.VK_Z]) {
-            camera.translateCameraInPlace(camera.getCameraDirection(), 1, translationCameraSpeed, deltaFrameTime);
-        }
-        // S = Behind
-        if (keyboardInput.getKeysPressed()[KeyEvent.VK_S]) {
-            camera.translateCameraInPlace(camera.getCameraDirection(), -1, translationCameraSpeed, deltaFrameTime);
-        }
-    }
-
-    public void handleUp(double deltaFrameTime, double translationCameraSpeed) {
-        // SHIFT + SPACE = Down
-        // SPACE = Up
-        if (keyboardInput.getKeysPressed()[KeyEvent.VK_SHIFT]) {
-            if (keyboardInput.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.translateCameraInPlace(camera.getCameraUp(), -1, translationCameraSpeed, deltaFrameTime);
-            }
-        } else {
-            if (keyboardInput.getKeysPressed()[KeyEvent.VK_SPACE]) {
-                camera.translateCameraInPlace(camera.getCameraUp(), 1, translationCameraSpeed, deltaFrameTime);
-            }
-        }
-    }
-
     public void handleMouseMoving(MouseEvent e) {
-        Vertex3D winMousePos = new Vertex3D(e.getPoint());
+        Point currentPosGlobal = e.getLocationOnScreen();
 
-        Vertex3D delta = new Vertex3D(winMousePos.sub(mouseMotionInput.getWinLastMousePosition()));
-
-        camera.setCamPitch(camera.getCamPitch() + camera.getdRotationCameraSpeed() * delta.getY() * mouseMotionInput.getMouseSensitivity());
-        camera.setCamYaw(camera.getCamYaw() + camera.getdRotationCameraSpeed() * delta.getX() * mouseMotionInput.getMouseSensitivity());
-
-        try {
+        if (isFirstMove) {
+            lastRobotPos.setLocation(currentPosGlobal);
             centerMouse();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            isFirstMove = false;
+            return;
         }
+
+        if (currentPosGlobal.x == lastRobotPos.x && currentPosGlobal.y == lastRobotPos.y) {
+            return;
+        }
+
+        double deltaX = currentPosGlobal.x - lastRobotPos.x;
+        double deltaY = currentPosGlobal.y - lastRobotPos.y;
+
+        camera.setCamPitch(camera.getCamPitch() + camera.getdRotationCameraSpeed() * deltaY * mouseMotionInput.getMouseSensitivity());
+        camera.setCamYaw(camera.getCamYaw()     + camera.getdRotationCameraSpeed() * deltaX * mouseMotionInput.getMouseSensitivity());
+
+        centerMouse();
     }
+
+    public void centerMouse() {
+        Vertex3D globalCenter = graphicEngineContext.getCanvasCenter();
+        if (globalCenter == null) return;
+
+        int targetX = (int) globalCenter.getX();
+        int targetY = (int) globalCenter.getY();
+
+        robot.mouseMove(targetX, targetY);
+
+        lastRobotPos.setLocation(targetX, targetY);
+    }
+
     public void handleMouseWheelInput(MouseWheelEvent e) {
         camera.setZoom(camera.getZoom() - e.getWheelRotation() * camera.getZoomFactor());
         System.out.println(camera.getZoom());

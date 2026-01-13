@@ -3,12 +3,16 @@ package graphicEngine.core;
 import graphicEngine.math.geometry.Vertex3D;
 import graphicEngine.renderer.Camera;
 
+import javax.swing.*;
+import java.awt.*;
+
 public class GraphicEngineContext {
     private final GraphicEngine graphicEngine;
 
     private int windowWidth;
     private int windowHeight;
     private Vertex3D windowPosition;
+    private Vertex3D canvasCenter;
 
     private int nbTriRenderPerFrame;
 
@@ -33,12 +37,21 @@ public class GraphicEngineContext {
     }
 
     public void updateWindowInformation() {
-        if (graphicEngine.isShowing()) {
-            Vertex3D location = new Vertex3D(graphicEngine.getLocationOnScreen().x, graphicEngine.getLocationOnScreen().y, 0);
-            this.windowPosition = new Vertex3D(location.x, location.y, 0);
-        }
         this.windowWidth = graphicEngine.getWidth();
         this.windowHeight = graphicEngine.getHeight();
+
+        if (graphicEngine.isShowing()) {
+            Point loc = graphicEngine.getLocationOnScreen();
+            this.windowPosition = new Vertex3D(loc.x, loc.y, 0);
+
+            int localCenterX = this.windowWidth / 2;
+            int localCenterY = this.windowHeight / 2;
+            Point centerPoint = new Point(localCenterX, localCenterY);
+
+            SwingUtilities.convertPointToScreen(centerPoint, graphicEngine);
+
+            this.canvasCenter = new Vertex3D(centerPoint.x, centerPoint.y, 0);
+        }
     }
 
     public void updateNbRenderedTriangle() {
@@ -119,5 +132,9 @@ public class GraphicEngineContext {
 
     public void setCurrentUPS(int currentUPS) {
         this.currentUPS = currentUPS;
+    }
+
+    public Vertex3D getCanvasCenter() {
+        return canvasCenter;
     }
 }

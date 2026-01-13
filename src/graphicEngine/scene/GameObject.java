@@ -67,10 +67,6 @@ public class GameObject {
         return mesh;
     }
 
-    public void setMesh(Mesh mesh) {
-        this.mesh = mesh;
-    }
-
     public Matrix getWorldTransformMatrix() {
         if (isDirty) {
             updateWorldTransformMatrix();

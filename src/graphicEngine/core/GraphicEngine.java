@@ -29,6 +29,7 @@ public class GraphicEngine extends Canvas implements Runnable {
     private double anglePhi = 0;
 
     private boolean isRunning;
+    private boolean isBenchmarkMode = false;
 
     public GraphicEngine(int widthInit, int heightInit) {
         this.graphicEngineContext = new GraphicEngineContext(this, widthInit, heightInit);
@@ -55,6 +56,7 @@ public class GraphicEngine extends Canvas implements Runnable {
                 List.of(new Scene.MeshData("teapot","obj model\\teapot.obj"),
                         new Scene.MeshData("axis","obj model\\axis.obj"),
                         new Scene.MeshData("cube","obj model\\cube.obj")
+//                        new Scene.MeshData("F1","obj model\\F1.obj")
         ));
 
         this.scene.addMultipleGameObjects(
@@ -66,8 +68,11 @@ public class GraphicEngine extends Canvas implements Runnable {
                         new Scene.ObjectData("cube1",   "cube"),
                         new Scene.ObjectData("teapot5", "teapot"),
                         new Scene.ObjectData("teapot6", "teapot")
-
+//                        new Scene.ObjectData("F1", "F1")
         ));
+
+
+//        scene.getGameObject(8).setScale(2.5, 2.5, 2.5);
 
         scene.getGameObject(4).setPosition(0, 0, 0);
         scene.getGameObject(4).setScale(-1, 1, 1);
@@ -85,7 +90,7 @@ public class GraphicEngine extends Canvas implements Runnable {
         t1.setPosition(-6, 0, 8);
         t1.setRotation(0, 0, 0);
         t1.setScale(1, 1, 1);
-        t1.setRendered(true);
+        t1.setRendered(false);
 
         GameObject t2 = scene.getGameObject(1);
         t2.setPosition(6, 0, 8);
@@ -109,6 +114,9 @@ public class GraphicEngine extends Canvas implements Runnable {
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
 
         this.pipeline = new Pipeline(camera, scene, graphicEngineContext);
+
+        this.isBenchmarkMode = true;
+
         this.repaint();
     }
 
@@ -153,12 +161,23 @@ public class GraphicEngine extends Canvas implements Runnable {
         long startTime = System.nanoTime();
         long previousTime = startTime;
 
-
         while (isRunning) {
+            if (isBenchmarkMode && graphicEngineContext.getElapsedFrame() >= 300) {
+                System.out.println("=== RÉSULTAT BENCHMARK ===");
+                System.out.println("Temps total : " + graphicEngineContext.getElapsedTime());
+                System.out.println("FPS Moyen : " + (300 / graphicEngineContext.getElapsedTime()));
+                System.exit(0);
+            }
+
             long currentTime = System.nanoTime();
 
             double deltaTime = (currentTime - previousTime) / 1_000_000_000.0;
             graphicEngineContext.setDeltaTime(deltaTime);
+            System.out.println(deltaTime);
+
+            if (deltaTime > 0.25) {
+                deltaTime = 0.25;
+            }
 
             double elapsedTime = (currentTime - startTime) / 1_000_000_000.0;
             graphicEngineContext.setElapsedTime(elapsedTime);
@@ -178,13 +197,14 @@ public class GraphicEngine extends Canvas implements Runnable {
             if (needsRender) {
                 this.render();
                 currentFPS++;
+                graphicEngineContext.incrementElapsedFrame();
             }
 
             if (System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
 
                 graphicEngineContext.setCurrentUPS(currentUPS);
-                graphicEngineContext.setCurrentUPS(currentUPS);
+                graphicEngineContext.setCurrentFPS(currentFPS);
 
                 currentUPS = 0;
                 currentFPS = 0;

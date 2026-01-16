@@ -13,6 +13,8 @@ public class Triangle {
     private Vertex3D[] vertices = new Vertex3D[3];
     private Color color;
     private Vector3D normal = null;
+    private final int[] xs = new int[3];
+    private final int[] ys = new int[3];
 
 
     public Triangle() {
@@ -103,31 +105,23 @@ public class Triangle {
 
     public void drawTriangle(Graphics g, boolean isOutlineRender) {
         // Getting back the coordinate to draw the 2D triangle
-        int[] xs = new int[3];
-        int[] ys = new int[3];
         this.get2DCoordinates(xs, ys);
 
-        Graphics2D g2 = (Graphics2D) g;
-
-        g2.setColor(this.getColor()); // Setting the correct color
-        g2.fillPolygon(xs, ys, 3);
+        g.setColor(this.getColor()); // Setting the correct color
+        g.fillPolygon(xs, ys, 3);
 
         if (isOutlineRender) {
-            g2.setColor(Color.BLACK); // Drawing the outline
-            g2.drawPolygon(xs, ys, 3);
+            g.setColor(Color.BLACK); // Drawing the outline
+            g.drawPolygon(xs, ys, 3);
         }
-
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
     }
-
-
 
     public Triangle convertToWindowSpace(int iWinWidth, int iWinHeight) {
         // X/Y Inverted so need to put them back???
         this.scaleInPlaceX(-1);
         this.scaleInPlaceY(-1);
 
-        // Offset into visible normalised space
+        // Offset into visible normalized space
         Vector3D vOffsetView = new Vector3D(1,1,0);
         this.translateInPlace(vOffsetView);
 
@@ -221,7 +215,6 @@ public class Triangle {
     public Vertex3D[] getVertices() {
         return vertices;
     }
-
 
     public Color getColor() {
         return color;

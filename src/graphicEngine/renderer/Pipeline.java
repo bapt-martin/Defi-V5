@@ -117,10 +117,14 @@ public class Pipeline {
     public void rasterizePass(Graphics g) {
         int width = graphicEngineContext.getWindowWidth();
         int height = graphicEngineContext.getWindowHeight();
+
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+
         for (Triangle triToClip : processedTriangle) {
             this.clipToScreen(width, height, triToClip);
 
-            this.drawBatch(graphicEngineContext, g);
+            this.drawBatch(graphicEngineContext, g2);
         }
     }
 

@@ -16,10 +16,12 @@ public class HeadUpDisplay {
     private String positionText = "Pos: -";
     private String rotationText = "Rot: -";
     private String triText = "Tri: -";
+    private String timeText = "Time : -";
+    private String frameText = "Frame : -";
 
     private final List<Double> frameTimeHistory = new ArrayList<>();
     private final List<Integer> triCountHistory = new ArrayList<>();
-    private final int MAX_HISTORY = 410;
+    private final int MAX_HISTORY = 440;
 
     private Color perfColor = Color.WHITE;
 
@@ -47,6 +49,8 @@ public class HeadUpDisplay {
         this.captureFrameMetrics(deltaTime);
 
         this.updateTransform();
+        this.updateElapsedTime();
+        this.updateFrameCounter();
 
         if (now - lastUiUpdate < UI_UPDATE_INTERVAL) {
             return;
@@ -57,6 +61,14 @@ public class HeadUpDisplay {
 
         this.updateFpsUps(deltaTime);
         this.updatePerfScore(deltaTime);
+    }
+
+    private void updateFrameCounter() {
+        this.frameText = String.format("Frame : %d", graphicEngineContext.getElapsedFrame());
+    }
+
+    private void updateElapsedTime() {
+        this.timeText = String.format("Time : %.1f", graphicEngineContext.getElapsedTime());
     }
 
     private void captureFrameMetrics(double deltaTime) {
@@ -89,7 +101,7 @@ public class HeadUpDisplay {
     public void updatePerfScore(double deltaTime) {
         double rawScore = ((1.0 / graphicEngineContext.getFPS_TARGET()) / deltaTime) * 100;
         double score = Math.min(200, rawScore);
-        this.perfText = String.format("Perf: %.0f%% (%.1f ms)", score, deltaTime * 1000); // *1000 pour ms
+        this.perfText = String.format("Perf: %.0f%% (%.1f ms)", score, deltaTime * 1000);
         this.perfColor = getScoreColor(score);
     }
 
@@ -124,32 +136,36 @@ public class HeadUpDisplay {
         }
 
         g.setFont(font);
-
         g.setColor(backgroundColor);
-        g.fillRect(10, 10, 440, 155);
 
         int startX = 25;
         int startY = 35;
         int lineHeight = 20;
 
+        g.fillRect(10, 10, 470, 150);
+
+
         g.setColor(perfColor);
         g.drawString(perfText, startX, startY);
-
-        g.setColor(Color.CYAN);
-        g.drawString(triText, startX + 220, startY + 2 * lineHeight);
-
-        g.setColor(Color.WHITE);
-        g.drawString(fpsText, startX + 220, startY);
-
-        g.setColor(Color.WHITE);
-        g.drawString(upsText, startX + 220, startY + lineHeight);
 
         g.setColor(Color.WHITE);
         g.drawString(positionText, startX, startY + lineHeight);
 
-        g.drawString(rotationText, startX, startY + (lineHeight * 2));
+        g.drawString(rotationText, startX, startY + lineHeight*2);
 
-        drawGraph(g, 20, 100, MAX_HISTORY, 50);
+        g.drawString(fpsText, startX + 220, startY);
+
+        g.drawString(upsText, startX + 220, startY + lineHeight);
+
+        g.setColor(Color.CYAN);
+        g.drawString(triText, startX + 220, startY + lineHeight*2);
+
+        g.setColor(Color.WHITE);
+        g.drawString(frameText, startX + 350, startY);
+
+        g.drawString(timeText, startX + 350, startY + lineHeight);
+
+        drawGraph(g, startX, startY + lineHeight*3, MAX_HISTORY, 50);
     }
 
     private void drawGraph(Graphics g, int x, int y, int w, int h) {
@@ -169,7 +185,6 @@ public class HeadUpDisplay {
 
         int maxTri = Collections.max(triCountHistory);
         if (maxTri == 0) maxTri = 1;
-
 
         this.drawScaledLine(triCountHistory, maxTri, Color.CYAN, g, x, y, w, h);
     }
@@ -196,6 +211,9 @@ public class HeadUpDisplay {
             g.drawLine(x + i, y1, x + i + 1, y2);
         }
     }
+
+
+
 
     public static Color getScoreColor(double score) {
         double clampedScore = Math.max(0, Math.min(100, score));

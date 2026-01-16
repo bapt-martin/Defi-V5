@@ -18,6 +18,7 @@ public class GraphicEngineContext {
 
     private double deltaTime;
     private double elapsedTime = 0;
+    private int elapsedFrame = 0;
     private int currentFPS = 0;
     private int currentUPS = 0;
 
@@ -136,5 +137,17 @@ public class GraphicEngineContext {
 
     public Vertex3D getCanvasCenter() {
         return canvasCenter;
+    }
+
+    public int getElapsedFrame() {
+        return elapsedFrame;
+    }
+
+    public void setElapsedFrame(int elapsedFrame) {
+        this.elapsedFrame = elapsedFrame;
+    }
+
+    public void incrementElapsedFrame() {
+        this.elapsedFrame += 1;
     }
 }

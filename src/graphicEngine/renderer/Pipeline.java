@@ -31,7 +31,6 @@ public class Pipeline {
         this.updateViewMatrix();
         this.processedTriangle = new ArrayList<>();
         this.trisToRender = new ArrayList<>();
-
     }
 
     public void execution(Graphics g) {
@@ -42,7 +41,6 @@ public class Pipeline {
         this.paintersAlgorithm();
 
         this.rasterizePass(g);
-
     }
 
     public void updateViewMatrix() {
@@ -50,9 +48,6 @@ public class Pipeline {
     }
 
     public void processAllGeometry() {
-        int width = graphicEngineContext.getWindowWidth();
-        int height = graphicEngineContext.getWindowHeight();
-
         Matrix projectionMatrix = this.camera.getProjectionMatrix();
 
         Vector3D lightDirection = new Vector3D(0, 0, 1);
@@ -66,22 +61,21 @@ public class Pipeline {
                 continue;
             }
 
-            this.processGameObject(width, height, projectionMatrix, frontClippingPlane, lightDirection, gameObject);
+            this.processGameObject(projectionMatrix, frontClippingPlane, lightDirection, gameObject);
         }
     }
 
-    public void processGameObject(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, GameObject gameObject) {
+    public void processGameObject(Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, GameObject gameObject) {
         Matrix worldTransformMatrix = gameObject.getWorldTransformMatrix();
         List<Triangle> triList = gameObject.getMesh().getMeshTriangle();
 
         for (Triangle triMeshClean : triList) {
-            this.processTriangle(width, height, projectionMatrix, frontClippingPlane, lightDirection, worldTransformMatrix, triMeshClean);
+            this.processTriangle(projectionMatrix, frontClippingPlane, lightDirection, worldTransformMatrix, triMeshClean);
         }
     }
 
-    public void processTriangle(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, Matrix worldTransformMatrix, Triangle triMeshClean) { //Backface Culling
+    public void processTriangle(Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, Matrix worldTransformMatrix, Triangle triMeshClean) { //Backface Culling
         Triangle triTransformed = triMeshClean.transformed(worldTransformMatrix);
-
 
         boolean isFlipped = worldTransformMatrix.getDeterminant() < 0;
 
@@ -93,16 +87,16 @@ public class Pipeline {
 
         triTransformed.transformInPlace(viewMatrix);
 
-        this.clipAndProject(width, height, projectionMatrix, frontClippingPlane, triTransformed);
+        this.clipAndProject(projectionMatrix, frontClippingPlane, triTransformed);
     }
 
-    public void clipAndProject(int width, int height, Matrix projectionMatrix, Plane frontClippingPlane, Triangle triTransformed) {
+    public void clipAndProject(Matrix projectionMatrix, Plane frontClippingPlane, Triangle triTransformed) {
         int startIndex = this.processedTriangle.size();
         frontClippingPlane.clipTriangleAgainstPlane(triTransformed, this.processedTriangle);
         int endIndex = this.processedTriangle.size();
 
         for (int i = startIndex; i < endIndex; i++) {
-            this.processedTriangle.get(i).projectToScreenInPlace(projectionMatrix, width, height);
+            this.processedTriangle.get(i).projectToScreenInPlace(projectionMatrix, graphicEngineContext.getWindowWidth(), graphicEngineContext.getWindowHeight());
         }
     }
 

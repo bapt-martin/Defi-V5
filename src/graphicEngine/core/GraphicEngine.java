@@ -29,7 +29,17 @@ public class GraphicEngine extends Canvas implements Runnable {
     private double anglePhi = 0;
 
     private boolean isRunning;
-    private boolean isBenchmarkMode = false;
+
+    private boolean isHUDActive = false;
+    private boolean isBenchmarkModeActive = false;
+
+    private final int WARMUP_FRAMES = 50;
+    private final int COOLDOWN_FRAMES = 25;
+    private final int MEASURE_FRAMES = 150;
+    private final int TOTAL_FRAMES = WARMUP_FRAMES + MEASURE_FRAMES + COOLDOWN_FRAMES;
+    private long benchmarkStartTime = 0;
+    private double benchmarkDuration = 0;
+    private double finalBenchmarkFPS = 0;
 
     public GraphicEngine(int widthInit, int heightInit) {
         this.graphicEngineContext = new GraphicEngineContext(this, widthInit, heightInit);
@@ -55,7 +65,8 @@ public class GraphicEngine extends Canvas implements Runnable {
         this.scene.loadMeshes(
                 List.of(new Scene.MeshData("teapot","obj model\\teapot.obj"),
                         new Scene.MeshData("axis","obj model\\axis.obj"),
-                        new Scene.MeshData("cube","obj model\\cube.obj")
+                        new Scene.MeshData("cube centré","obj model\\cube.obj"),
+                        new Scene.MeshData("cube pas centré","obj model\\cube.obj")
 //                        new Scene.MeshData("F1","obj model\\F1.obj")
         ));
 
@@ -65,9 +76,10 @@ public class GraphicEngine extends Canvas implements Runnable {
                         new Scene.ObjectData("teapot3", "teapot"),
                         new Scene.ObjectData("teapot4", "teapot"),
                         new Scene.ObjectData("axis1",   "axis"),
-                        new Scene.ObjectData("cube1",   "cube"),
+                        new Scene.ObjectData("cube1",   "cube centré"),
                         new Scene.ObjectData("teapot5", "teapot"),
-                        new Scene.ObjectData("teapot6", "teapot")
+                        new Scene.ObjectData("teapot6", "teapot"),
+                        new Scene.ObjectData("cube2", "cube pas centré")
 //                        new Scene.ObjectData("F1", "F1")
         ));
 
@@ -75,12 +87,14 @@ public class GraphicEngine extends Canvas implements Runnable {
 //        scene.getGameObject(8).setScale(2.5, 2.5, 2.5);
 
         scene.getGameObject(4).setPosition(0, 0, 0);
-        scene.getGameObject(4).setScale(-1, 1, 1);
+        scene.getGameObject(4).setScale(-0.3, 0.3, 0.3);
+
+        scene.getGameObject(5).setPosition(1, 1, 1);
+        scene.getGameObject(8).setPosition(0, 0, 0);
+        scene.getGameObject(5).setRendered(true);
+        scene.getGameObject(8).setRendered(false);
         scene.getGameObject(4).setRendered(true);
 
-
-        scene.getGameObject(5).setPosition(0, 0, 0);
-        scene.getGameObject(5).setRendered(true);
 
         scene.getGameObject(6).setRendered(false);
         scene.getGameObject(7).setRendered(false);
@@ -90,32 +104,33 @@ public class GraphicEngine extends Canvas implements Runnable {
         t1.setPosition(-6, 0, 8);
         t1.setRotation(0, 0, 0);
         t1.setScale(1, 1, 1);
-        t1.setRendered(false);
 
         GameObject t2 = scene.getGameObject(1);
         t2.setPosition(6, 0, 8);
         t2.setRotation(45, 0, 0);
         t2.setScale(1.5, 1.5, 1.5);
-        t2.setRendered(false);
 
         GameObject t3 = scene.getGameObject(2);
         t3.setPosition(0, 5, 8);
         t3.setRotation(0, 0, 180);
         t3.setScale(0.5, 0.5, 0.5);
-        t3.setRendered(false);
 
         GameObject t4 = scene.getGameObject(3);
         t4.setPosition(0, -5, 8);
         t4.setRotation(-45, 45, 0);
         t4.setScale(2, 0.6, 1.2);
-        t4.setRendered(false);
 
+        t1.setRendered(false);
+        t2.setRendered(false);
+        t3.setRendered(false);
+        t4.setRendered(false);
 
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
 
         this.pipeline = new Pipeline(camera, scene, graphicEngineContext);
 
-        this.isBenchmarkMode = true;
+        this.isBenchmarkModeActive = false;
+        this.isHUDActive = false;
 
         this.repaint();
     }
@@ -155,19 +170,13 @@ public class GraphicEngine extends Canvas implements Runnable {
         this.graphicEngineContext.updateWindowInformation();
 
         double deltaU = 0;
-
         long timer = System.currentTimeMillis();
 
         long startTime = System.nanoTime();
         long previousTime = startTime;
 
         while (isRunning) {
-            if (isBenchmarkMode && graphicEngineContext.getElapsedFrame() >= 300) {
-                System.out.println("=== RÉSULTAT BENCHMARK ===");
-                System.out.println("Temps total : " + graphicEngineContext.getElapsedTime());
-                System.out.println("FPS Moyen : " + (300 / graphicEngineContext.getElapsedTime()));
-                System.exit(0);
-            }
+            this.manageBenchmark();
 
             long currentTime = System.nanoTime();
 
@@ -238,11 +247,13 @@ public class GraphicEngine extends Canvas implements Runnable {
         double sY = 1.0 + (0.5 * Math.sin(angleTheta));
         double sZ = 1.0 + (0.5 * Math.cos(anglePhi));
 
-        scene.getGameObject(5).setScale(sX, sY, sZ);
-        scene.getGameObject(5).rotate(2,2,2);
-        scene.getGameObject(5).setPosition(x, y, z);
+//        scene.getGameObject(5).setScale(sX, sY, sZ);
+//        scene.getGameObject(5).rotate(0.5,1,1.5);
+//        scene.getGameObject(5).setPosition(x, y, z);
 
-        headUpDisplay.updateStats();
+        if (isHUDActive) {
+            headUpDisplay.updateStats();
+        }
     }
 
     private void render() {
@@ -253,7 +264,16 @@ public class GraphicEngine extends Canvas implements Runnable {
             return;
         }
 
-        Graphics g = bs.getDrawGraphics();
+        Graphics g = null;
+
+        try {
+            g = bs.getDrawGraphics();
+        } catch (Exception e) {
+            return;
+        }
+
+        g = bs.getDrawGraphics();
+//        Graphics g = this.getGraphics();
 
         g.setColor(this.getBackground());
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -264,10 +284,45 @@ public class GraphicEngine extends Canvas implements Runnable {
         graphicEngineContext.resetNbRenderedTriangle();
         pipeline.execution(g);
 
-        headUpDisplay.draw(g);
+        if (isHUDActive) {
+            headUpDisplay.draw(g);
+        }
 
         g.dispose();
         bs.show();
+    }
+
+    public void manageBenchmark() {
+        if (isBenchmarkModeActive) {
+            int currentTotalFrames = graphicEngineContext.getElapsedFrame();
+
+            if (currentTotalFrames == WARMUP_FRAMES) {
+                if (benchmarkStartTime == 0) {
+                    benchmarkStartTime = System.nanoTime();
+                    System.out.println("--- WARM-UP END ---");
+                    System.out.println("--- START OF MEASURE ---");
+                }
+            }
+
+            if (currentTotalFrames == WARMUP_FRAMES + MEASURE_FRAMES) {
+                if (finalBenchmarkFPS == 0) {
+                    long benchmarkEndTime = System.nanoTime();
+                    benchmarkDuration = (benchmarkEndTime - benchmarkStartTime) / 1_000_000_000.0;
+                    finalBenchmarkFPS = MEASURE_FRAMES / benchmarkDuration;
+                    System.out.println("--- END OF MEASURE ---");
+                }
+            }
+
+            if (currentTotalFrames >= TOTAL_FRAMES) {
+                System.out.println("=== BENCHMARK RESULT ===");
+                System.out.println("FRAME COUNTER : " + MEASURE_FRAMES);
+                System.out.println("AVERAGE FPS   : " + String.format("%.2f", finalBenchmarkFPS));
+                System.out.println("ELAPSED TIME  : " + String.format("%.2f", benchmarkDuration));
+                System.out.println("TARGET TIME   : " + (double) MEASURE_FRAMES/graphicEngineContext.getFPS_TARGET());
+
+                System.exit(0);
+            }
+        }
     }
 
     public static void main(String[] args) {

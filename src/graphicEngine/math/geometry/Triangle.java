@@ -11,6 +11,7 @@ import static java.awt.Color.*;
 
 public class Triangle {
     private Vertex3D[] vertices = new Vertex3D[3];
+    private Vertex2D[] textVertices = new Vertex2D[3];
     private Color color;
     private Vector3D normal = null;
     private final int[] xs = new int[3];
@@ -31,6 +32,18 @@ public class Triangle {
         color = BLACK;
     }
 
+    public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Vertex2D t1, Vertex2D t2, Vertex2D t3) {
+        vertices[0] = new Vertex3D(p1);
+        vertices[1] = new Vertex3D(p2);
+        vertices[2] = new Vertex3D(p3);
+
+        textVertices[0] = new Vertex2D(t1);
+        textVertices[1] = new Vertex2D(t2);
+        textVertices[2] = new Vertex2D(t3);
+
+        color = BLACK;
+    }
+
     public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Color color) {
         this(p1, p2, p3);
         this.color = color;
@@ -39,7 +52,6 @@ public class Triangle {
     public Triangle(Vertex3D[] verts, Color color) {
         this(verts[0], verts[1], verts[2], color);
     }
-
 
     public void copyFrom(Triangle other) {
         this.vertices[0].copyFrom(other.vertices[0]);

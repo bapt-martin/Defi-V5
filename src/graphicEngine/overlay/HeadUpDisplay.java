@@ -10,31 +10,35 @@ import java.util.Collections;
 import java.util.List;
 
 public class HeadUpDisplay {
-    private String fpsText = "FPS: -";
-    private String upsText = "UPS: -";
-    private String perfText = "Perf: -";
+    private String fpsText      = "FPS: -";
+    private String upsText      = "UPS: -";
+    private String perfText     = "Perf: -";
     private String positionText = "Pos: -";
     private String rotationText = "Rot: -";
-    private String triText = "Tri: -";
-    private String timeText = "Time : -";
-    private String frameText = "Frame : -";
+    private String triText      = "Tri: -";
+    private String timeText     = "Time : -";
+    private String frameText    = "Frame : -";
 
     private final List<Double> frameTimeHistory = new ArrayList<>();
     private final List<Integer> triCountHistory = new ArrayList<>();
     private final int MAX_HISTORY = 440;
+    private int[] yMem = new int[MAX_HISTORY];
 
     private Color perfColor = Color.WHITE;
 
     private final GraphicEngineContext graphicEngineContext;
 
+    private double lastPerfUpdate = 0;
     private double lastUiUpdate = 0;
-    private final double UI_UPDATE_INTERVAL = 0.25;
+    private final double PERF_UPDATE_INTERVAL = 0.25;
+    private final double UI_UPDATE_INTERVAL;
 
     private final Font font = new Font("Consolas", Font.BOLD, 14);
     private final Color backgroundColor = new Color(0, 0, 0, 150);
 
     public HeadUpDisplay(GraphicEngineContext graphicEngineContext) {
         this.graphicEngineContext = graphicEngineContext;
+        this.UI_UPDATE_INTERVAL = 1.0/graphicEngineContext.getUPS_TARGET();
 
         for (int i = 0; i < MAX_HISTORY; i++) {
             frameTimeHistory.add(0.0);
@@ -44,18 +48,24 @@ public class HeadUpDisplay {
 
     public void updateStats() {
         double now = graphicEngineContext.getElapsedTime();
-        double deltaTime = graphicEngineContext.getDeltaTime();
-
-        this.captureFrameMetrics(deltaTime);
-
-        this.updateTransform();
-        this.updateElapsedTime();
-        this.updateFrameCounter();
 
         if (now - lastUiUpdate < UI_UPDATE_INTERVAL) {
             return;
         }
         lastUiUpdate = now;
+
+        double deltaTime = graphicEngineContext.getDeltaTime();
+
+        this.captureFrameMetrics();
+
+        this.updateTransform();
+        this.updateElapsedTime();
+        this.updateFrameCounter();
+
+        if (now - lastPerfUpdate < PERF_UPDATE_INTERVAL) {
+            return;
+        }
+        lastPerfUpdate = now;
 
         if (deltaTime <= 0) return;
 
@@ -71,7 +81,8 @@ public class HeadUpDisplay {
         this.timeText = String.format("Time : %.1f", graphicEngineContext.getElapsedTime());
     }
 
-    private void captureFrameMetrics(double deltaTime) {
+    private void captureFrameMetrics() {
+        double deltaTime = graphicEngineContext.getDeltaTime();
         addToHistory(frameTimeHistory, deltaTime * 1000);
 
         int nbTri = graphicEngineContext.getNbTriRenderPerFrame();
@@ -88,7 +99,7 @@ public class HeadUpDisplay {
     }
 
     public void updateFpsUps(double deltaTime) {
-        double currentFps = 1.0 / deltaTime;
+        double currentFps = graphicEngineContext.getCurrentFPS();
         if (currentFps > 10000) {
             this.fpsText = "FPS: >10000";
         } else {
@@ -136,14 +147,14 @@ public class HeadUpDisplay {
         }
 
         g.setFont(font);
+
         g.setColor(backgroundColor);
+        g.fillRect(10, 10, 470, 150);
+
 
         int startX = 25;
         int startY = 35;
         int lineHeight = 20;
-
-        g.fillRect(10, 10, 470, 150);
-
 
         g.setColor(perfColor);
         g.drawString(perfText, startX, startY);
@@ -190,30 +201,30 @@ public class HeadUpDisplay {
     }
 
     public void drawScaledLine(List<? extends Number> valueList, double max, Color color, Graphics g, int x, int y, int w, int h) {
-        if (valueList.size() < 2) return;
+        int size = valueList.size();
+        if (size < 2) return;
 
         if (color != null) {
             g.setColor(color);
         }
 
-        for (int i = 0; i < valueList.size() - 1; i++) {
-            double val1 = valueList.get(i).doubleValue();
-            double val2 = valueList.get(i + 1).doubleValue();
+        double startVal = valueList.getFirst().doubleValue();
+        int startY = y + h - (int) ((startVal / max) * h);
 
-            int y1 = y + h - (int) ((val1 / max) * h);
-            int y2 = y + h - (int) ((val2 / max) * h);
+        for (int i = 0; i < size - 1; i++) {
+            double endVal = valueList.get(i + 1).doubleValue();
+
+            int endY = y + h - (int) ((endVal / max) * h);
 
             if (color == null) {
-                double localScore = ((max/2 / val1) * 100);
+                double localScore = ((max/2/endVal) * 100);
                 g.setColor(getScoreColor(localScore));
             }
 
-            g.drawLine(x + i, y1, x + i + 1, y2);
+            g.drawLine(x + i, startY, x + i + 1, endY);
+            startY = endY;
         }
     }
-
-
-
 
     public static Color getScoreColor(double score) {
         double clampedScore = Math.max(0, Math.min(100, score));

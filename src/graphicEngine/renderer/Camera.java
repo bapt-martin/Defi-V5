@@ -27,7 +27,7 @@ public class Camera {
 
 
     public Camera(GraphicEngineContext graphicEngineContext) {
-        this.cameraPosition = new Vertex3D(0, 4, 25);
+        this.cameraPosition = new Vertex3D(0, 0, 3);
         this.cameraRotation = new CameraRotation(0, 0, 0);
         this.cameraDirection = new Vector3D(0, 0, 1);
         this.cameraUp = new Vector3D(0, 1, 0);

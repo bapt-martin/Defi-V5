@@ -17,9 +17,8 @@ public class InputManager {
     private final MouseInput mouseInput;
     private final MouseMotionInput mouseMotionInput;
     private Robot robot;
-    private Point centerReference = new Point(0, 0);
     private Point lastRobotPos = new Point(0, 0);
-    private boolean isFirstMove = true; // Pour éviter le saut au démarrage
+    private boolean isFirstMove = true;
 
     public InputManager(GraphicEngine graphicEngine, Camera camera) {
         this.graphicEngineContext = graphicEngine.getEngineContext();
@@ -43,27 +42,6 @@ public class InputManager {
         c.setFocusable(true);
         c.requestFocus();
     }
-
-    public void moveMouseWindow(Vertex3D coordinatesIn) {
-        Vertex3D coordinatesOut = coordinatesIn.add(graphicEngineContext.getWindowPosition());
-
-        robot.mouseMove((int) coordinatesOut.getX(), (int) coordinatesOut.getY());
-
-        this.mouseMotionInput.setWinLastMousePosition(coordinatesIn);
-    }
-
-//    public void centerMouse() {
-//        Component view = graphicEngineContext.getGraphicEngine();
-//        if (view == null || !view.isShowing()) return;
-//
-//        int centerX = view.getWidth() / 2;
-//        int centerY = view.getHeight() / 2;
-//
-//        Point globalCenter = new Point(centerX, centerY);
-//        SwingUtilities.convertPointToScreen(globalCenter, view);
-//
-//        robot.mouseMove(globalCenter.x, globalCenter.y);
-//    }
 
     public void handleKeyPress() {
         double translationCameraSpeed = camera.getdTranslationCameraSpeed();
@@ -92,7 +70,6 @@ public class InputManager {
         }
 
         if (xDir == 0 && yDir == 0 && zDir == 0) return;
-
 
         Vector3D moveX = new Vector3D(camera.getCameraRight());
         moveX.scaleInPlace(xDir);

@@ -43,12 +43,25 @@ public class InputManager {
         c.requestFocus();
     }
 
+    public void toggleBenchmarkMode() {
+        if(keyboardInput.getKeysPressed()[KeyEvent.VK_B] && !graphicEngineContext.isBenchmarkModeActive()) {
+            graphicEngineContext.getBenchmarkManager().start();
+        }
+
+        if(!keyboardInput.getKeysPressed()[KeyEvent.VK_B] && graphicEngineContext.isBenchmarkModeActive()) {
+            System.out.println("--- FORCED STOP ---");
+            graphicEngineContext.getBenchmarkManager().finish();
+        }
+    }
+
     public void handleKeyPress() {
         double translationCameraSpeed = camera.getdTranslationCameraSpeed();
         double rotationCameraSpeed    = camera.getdRotationCameraSpeed();
 
         this.handleTranslation(1.0/graphicEngineContext.getUPS_TARGET(), translationCameraSpeed);
         this.handleRotation(1.0/graphicEngineContext.getUPS_TARGET(), rotationCameraSpeed);
+
+        this.toggleBenchmarkMode();
     }
 
     public void handleTranslation(double deltaFrameTime, double translationCameraSpeed) {

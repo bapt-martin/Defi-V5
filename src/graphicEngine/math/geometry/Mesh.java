@@ -21,16 +21,15 @@ public class Mesh {
             Vertex3D vert3 = vertices.get(face[2]);
 
 
-            Vertex2D tVert1 = new Vertex2D();
-            Vertex2D tVert2 = new Vertex2D();
-            Vertex2D tVert3 = new Vertex2D();
+            Vertex2D tVert1;
+            Vertex2D tVert2;
+            Vertex2D tVert3;
 
-            if (count%2 == 0) {
-                tVert1 = new Vertex2D(0,1);
+            tVert1 = new Vertex2D(0,1);
+            if ((count % 2) == 0) {
                 tVert2 = new Vertex2D(0,0);
                 tVert3 = new Vertex2D(1,0);
             } else {
-                tVert1 = new Vertex2D(0,1);
                 tVert2 = new Vertex2D(1,0);
                 tVert3 = new Vertex2D(1,1);
             }

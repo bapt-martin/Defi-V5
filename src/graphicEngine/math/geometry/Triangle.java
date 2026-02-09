@@ -25,13 +25,6 @@ public class Triangle {
         this.color = BLUE;
     }
 
-    public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3) {
-        vertices[0] = new Vertex3D(p1);
-        vertices[1] = new Vertex3D(p2);
-        vertices[2] = new Vertex3D(p3);
-        color = BLACK;
-    }
-
     public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Vertex2D t1, Vertex2D t2, Vertex2D t3) {
         vertices[0] = new Vertex3D(p1);
         vertices[1] = new Vertex3D(p2);
@@ -44,13 +37,38 @@ public class Triangle {
         color = BLACK;
     }
 
+    public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Vertex2D t1, Vertex2D t2, Vertex2D t3, Color color) {
+        vertices[0] = new Vertex3D(p1);
+        vertices[1] = new Vertex3D(p2);
+        vertices[2] = new Vertex3D(p3);
+
+        textVertices[0] = new Vertex2D(t1);
+        textVertices[1] = new Vertex2D(t2);
+        textVertices[2] = new Vertex2D(t3);
+
+        this.color = color;
+    }
+
     public Triangle(Vertex3D p1, Vertex3D p2, Vertex3D p3, Color color) {
-        this(p1, p2, p3);
+        this(p1, p2, p3, new Vertex2D(), new Vertex2D(), new Vertex2D());
+        this.color = color;
+    }
+
+    public Triangle(Vertex2D t1, Vertex2D t2, Vertex2D t3, Color color) {
+        this(new Vertex3D(), new Vertex3D(), new Vertex3D(), t1, t2, t3);
         this.color = color;
     }
 
     public Triangle(Vertex3D[] verts, Color color) {
         this(verts[0], verts[1], verts[2], color);
+    }
+
+    public Triangle(Vertex2D[] textVerts, Color color) {
+        this(textVerts[0], textVerts[1], textVerts[2], color);
+    }
+
+    public Triangle(Vertex3D[] verts, Vertex2D[] textVerts, Color color) {
+        this(verts[0], verts[1], verts[2],textVerts[0], textVerts[1], textVerts[2], color);
     }
 
     public void copyFrom(Triangle other) {
@@ -153,10 +171,6 @@ public class Triangle {
         return this;
     }
 
-    public void applyWorldTransformInPlace(Matrix worldTransformMatrix) {
-        this.transformed(worldTransformMatrix);
-    }
-
     public boolean isFacing(Camera camera, boolean isFlipped) {
         // Casting the ray of the camera
         Vector3D vCameraRay = this.getVertices()[0].sub(camera.getCameraPosition());
@@ -195,7 +209,7 @@ public class Triangle {
         this.grayScale(dpLightNorm);
     }
 
-    public Triangle transformed(Matrix matTransform) {
+    public Triangle VertexTransformed(Matrix matTransform) {
         Vertex3D[] vertsTriIn = this.getVertices();
         Vertex3D[] vertsTriTransformed = new Vertex3D[3];
 

@@ -21,6 +21,7 @@ public class GraphicEngine extends Canvas implements Runnable {
     private final Pipeline pipeline;
     private final Scene scene;
     private final GraphicEngineContext graphicEngineContext;
+    private final BenchmarkManager benchmarkManager;
 
     private int currentFPS = 0;
     private int currentUPS = 0;
@@ -28,22 +29,12 @@ public class GraphicEngine extends Canvas implements Runnable {
     private double angleTheta = 0;
     private double anglePhi = 0;
 
-    private boolean isRunning;
-
-    private boolean isHUDActive = false;
-    private boolean isBenchmarkModeActive = false;
-
-    private final int WARMUP_FRAMES = 50;
-    private final int COOLDOWN_FRAMES = 25;
-    private final int MEASURE_FRAMES = 150;
-    private final int TOTAL_FRAMES = WARMUP_FRAMES + MEASURE_FRAMES + COOLDOWN_FRAMES;
-    private long benchmarkStartTime = 0;
-    private double benchmarkDuration = 0;
-    private double finalBenchmarkFPS = 0;
 
     public GraphicEngine(int widthInit, int heightInit) {
         this.graphicEngineContext = new GraphicEngineContext(this, widthInit, heightInit);
+        this.benchmarkManager = new BenchmarkManager(graphicEngineContext);
 
+        this.graphicEngineContext.setBenchmarkManager(this.benchmarkManager);
 
         this.camera = new Camera(0.1,1000,90, graphicEngineContext);
 
@@ -53,6 +44,7 @@ public class GraphicEngine extends Canvas implements Runnable {
 
         this.setFocusable(true);
 //        this.setFocusTraversalKeysEnabled(false);
+
         this.requestFocusInWindow();
 
         this.graphicEngineContext.setCamera(this.camera);
@@ -120,17 +112,14 @@ public class GraphicEngine extends Canvas implements Runnable {
         t4.setRotation(-45, 45, 0);
         t4.setScale(2, 0.6, 1.2);
 
-        t1.setRendered(false);
-        t2.setRendered(false);
-        t3.setRendered(false);
-        t4.setRendered(false);
+        t1.setRendered(true);
+        t2.setRendered(true);
+        t3.setRendered(true);
+        t4.setRendered(true);
 
         this.headUpDisplay = new HeadUpDisplay(graphicEngineContext);
 
         this.pipeline = new Pipeline(camera, scene, graphicEngineContext);
-
-        this.isBenchmarkModeActive = false;
-        this.isHUDActive = false;
 
         this.repaint();
     }
@@ -150,15 +139,14 @@ public class GraphicEngine extends Canvas implements Runnable {
     }
 
     public synchronized void start() {
-        if (isRunning) return;
-        isRunning = true;
+        if (graphicEngineContext.isRunning()) return;
+        graphicEngineContext.setRunning(true);
         gameThread = new Thread(this, "EngineThread");
         gameThread.start();
     }
 
     public synchronized void stop() {
-        isRunning = false;
-        try {
+        try {graphicEngineContext.setRunning(false);
             gameThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -175,14 +163,14 @@ public class GraphicEngine extends Canvas implements Runnable {
         long startTime = System.nanoTime();
         long previousTime = startTime;
 
-        while (isRunning) {
-            this.manageBenchmark();
+        while (graphicEngineContext.isRunning()) {
+            benchmarkManager.update();
 
             long currentTime = System.nanoTime();
 
             double deltaTime = (currentTime - previousTime) / 1_000_000_000.0;
             graphicEngineContext.setDeltaTime(deltaTime);
-            System.out.println(deltaTime);
+//            System.out.println(deltaTime);
 
             if (deltaTime > 0.25) {
                 deltaTime = 0.25;
@@ -190,7 +178,6 @@ public class GraphicEngine extends Canvas implements Runnable {
 
             double elapsedTime = (currentTime - startTime) / 1_000_000_000.0;
             graphicEngineContext.setElapsedTime(elapsedTime);
-
             deltaU += deltaTime * graphicEngineContext.getUPS_TARGET();
 
             previousTime = currentTime;
@@ -251,7 +238,7 @@ public class GraphicEngine extends Canvas implements Runnable {
 //        scene.getGameObject(5).rotate(0.5,1,1.5);
 //        scene.getGameObject(5).setPosition(x, y, z);
 
-        if (isHUDActive) {
+        if (graphicEngineContext.isHUDActive()) {
             headUpDisplay.updateStats();
         }
     }
@@ -264,15 +251,7 @@ public class GraphicEngine extends Canvas implements Runnable {
             return;
         }
 
-        Graphics g = null;
-
-        try {
-            g = bs.getDrawGraphics();
-        } catch (Exception e) {
-            return;
-        }
-
-        g = bs.getDrawGraphics();
+        Graphics g = bs.getDrawGraphics();
 //        Graphics g = this.getGraphics();
 
         g.setColor(this.getBackground());
@@ -284,45 +263,12 @@ public class GraphicEngine extends Canvas implements Runnable {
         graphicEngineContext.resetNbRenderedTriangle();
         pipeline.execution(g);
 
-        if (isHUDActive) {
+        if (graphicEngineContext.isHUDActive()) {
             headUpDisplay.draw(g);
         }
 
         g.dispose();
         bs.show();
-    }
-
-    public void manageBenchmark() {
-        if (isBenchmarkModeActive) {
-            int currentTotalFrames = graphicEngineContext.getElapsedFrame();
-
-            if (currentTotalFrames == WARMUP_FRAMES) {
-                if (benchmarkStartTime == 0) {
-                    benchmarkStartTime = System.nanoTime();
-                    System.out.println("--- WARM-UP END ---");
-                    System.out.println("--- START OF MEASURE ---");
-                }
-            }
-
-            if (currentTotalFrames == WARMUP_FRAMES + MEASURE_FRAMES) {
-                if (finalBenchmarkFPS == 0) {
-                    long benchmarkEndTime = System.nanoTime();
-                    benchmarkDuration = (benchmarkEndTime - benchmarkStartTime) / 1_000_000_000.0;
-                    finalBenchmarkFPS = MEASURE_FRAMES / benchmarkDuration;
-                    System.out.println("--- END OF MEASURE ---");
-                }
-            }
-
-            if (currentTotalFrames >= TOTAL_FRAMES) {
-                System.out.println("=== BENCHMARK RESULT ===");
-                System.out.println("FRAME COUNTER : " + MEASURE_FRAMES);
-                System.out.println("AVERAGE FPS   : " + String.format("%.2f", finalBenchmarkFPS));
-                System.out.println("ELAPSED TIME  : " + String.format("%.2f", benchmarkDuration));
-                System.out.println("TARGET TIME   : " + (double) MEASURE_FRAMES/graphicEngineContext.getFPS_TARGET());
-
-                System.exit(0);
-            }
-        }
     }
 
     public static void main(String[] args) {
@@ -368,6 +314,10 @@ public class GraphicEngine extends Canvas implements Runnable {
 
     public int getCurrentUPS() {
         return currentUPS;
+    }
+
+    public BenchmarkManager getBenchmarkManager() {
+        return benchmarkManager;
     }
 }
 

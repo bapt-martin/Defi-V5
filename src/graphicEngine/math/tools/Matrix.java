@@ -6,6 +6,7 @@ import static java.lang.Math.*;
 public class Matrix {
     // ROW-MAJOR CONVENTION
     private double[][] matrix;
+    private static final Matrix TEMP_WORKER = new Matrix();
 
     public Matrix(int nbRow, int nbCol) {
         this.matrix = new double[nbRow][nbCol];
@@ -28,13 +29,19 @@ public class Matrix {
 
     public void copyFrom(Matrix other) {
         double[][] mat = other.getMatrix();
-        int rows = mat.length;
-        int cols = mat[0].length;
 
-        for (int i = 0; i < rows; i++) {
-            System.arraycopy(mat[i], 0, this.matrix[i], 0, cols);
+        for (int i = 0; i < 4; i++) {
+            System.arraycopy(mat[i], 0, this.matrix[i], 0, 4);
         }
     }
+
+//    public double get(int row, int col) {
+//        return matrix[row * 4 + col];
+//    }
+//
+//    public void set(int row, int col, double value) {
+//        matrix[row * 4 + col] = value;
+//    }
 
     public static Matrix createProjectionMatrix(double far, double near, double fov, int width, int height, double zoom) {
         double q = far / (far - near);
@@ -212,22 +219,40 @@ public class Matrix {
         return new Matrix(matRotationAxis);
     }
 
+    public static void multiply(Matrix matIn1, Matrix matIn2, Matrix matOut) {
+        double[][] mat1 = matIn1.getMatrix();
+        double[][] mat2 = matIn2.getMatrix();
+        double[][] matRes = matOut.getMatrix();
+
+        if (matOut == matIn1 || matOut == matIn2) {
+            multiply(matIn1, matIn2, TEMP_WORKER);
+            matOut.copyFrom(TEMP_WORKER);
+            return;
+        }
+
+        rowColMultiplication(mat1, mat2, matRes);
+    }
+
     public Matrix multiply(Matrix matIn) {
         double[][] mat1 = this.getMatrix();
         double[][] mat2 = matIn.getMatrix();
         double[][] matOut = new double[4][4];
 
-        for (int i = 0; i < 4; i++) {
-            double[] row = mat1[i];
-            for (int j = 0; j < 4; j++) {
-                matOut[i][j] = row[0] * mat2[0][j]
-                                + row[1] * mat2[1][j]
-                                + row[2] * mat2[2][j]
-                                + row[3] * mat2[3][j];
-            }
-        }
+        rowColMultiplication(mat1, mat2, matOut);
 
         return new Matrix(matOut);
+    }
+
+    private static void rowColMultiplication(double[][] mat1, double[][] mat2, double[][] matOut) {
+        for (int i = 0; i < 4; i++) {
+            double[] row = mat1[i];
+            for (int col = 0; col < 4; col++) {
+                matOut[i][col] = row[0] * mat2[0][col]
+                               + row[1] * mat2[1][col]
+                               + row[2] * mat2[2][col]
+                               + row[3] * mat2[3][col];
+            }
+        }
     }
 
     public static Matrix createTranslation(double x, double y, double z) {

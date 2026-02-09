@@ -11,6 +11,7 @@ public class KeyboardInput implements KeyListener {
     public KeyboardInput(InputManager inputManager) {
         this.inputManager = inputManager;
     }
+
     // Action listener methods
     @Override
     public void keyPressed(KeyEvent e) {

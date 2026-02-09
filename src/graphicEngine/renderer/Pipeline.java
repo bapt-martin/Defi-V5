@@ -75,7 +75,7 @@ public class Pipeline {
     }
 
     public void processTriangle(Matrix projectionMatrix, Plane frontClippingPlane, Vector3D lightDirection, Matrix worldTransformMatrix, Triangle triMeshClean) { //Backface Culling
-        Triangle triTransformed = triMeshClean.transformed(worldTransformMatrix);
+        Triangle triTransformed = triMeshClean.VertexTransformed(worldTransformMatrix);
 
         boolean isFlipped = worldTransformMatrix.getDeterminant() < 0;
 

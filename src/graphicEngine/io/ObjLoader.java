@@ -35,7 +35,6 @@ public abstract class ObjLoader {
                 line = line.trim();
                 if (!line.isEmpty()) {
                     char firstCharacter = line.charAt(0);
-                    if (firstCharacter == 'v' || firstCharacter == 'f');
 
                     Scanner scan = new Scanner(line).useLocale(Locale.US);
                     scan.next();

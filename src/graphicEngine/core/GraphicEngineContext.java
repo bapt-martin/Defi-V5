@@ -8,6 +8,12 @@ import java.awt.*;
 
 public class GraphicEngineContext {
     private final GraphicEngine graphicEngine;
+    private BenchmarkManager benchmarkManager;
+
+    private volatile boolean isRunning;
+
+    private boolean isHUDActive = true;
+    private boolean isBenchmarkModeActive = false;
 
     private int windowWidth;
     private int windowHeight;
@@ -26,6 +32,7 @@ public class GraphicEngineContext {
     private final int FPS_TARGET = 60;
 
     private Camera camera;
+
 
 
     public GraphicEngineContext(GraphicEngine graphicEngine, int windowWidth, int windowHeight) {
@@ -149,5 +156,37 @@ public class GraphicEngineContext {
 
     public void incrementElapsedFrame() {
         this.elapsedFrame += 1;
+    }
+
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void setRunning(boolean running) {
+        isRunning = running;
+    }
+
+    public boolean isHUDActive() {
+        return isHUDActive;
+    }
+
+    public void setHUDActive(boolean HUDActive) {
+        isHUDActive = HUDActive;
+    }
+
+    public boolean isBenchmarkModeActive() {
+        return isBenchmarkModeActive;
+    }
+
+    public void setBenchmarkModeActive(boolean benchmarkModeActive) {
+        isBenchmarkModeActive = benchmarkModeActive;
+    }
+
+    public BenchmarkManager getBenchmarkManager() {
+        return graphicEngine.getBenchmarkManager();
+    }
+
+    public void setBenchmarkManager(BenchmarkManager benchmarkManager) {
+        this.benchmarkManager = benchmarkManager;
     }
 }
